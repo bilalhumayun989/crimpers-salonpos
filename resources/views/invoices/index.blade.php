@@ -1,0 +1,489 @@
+@extends('layouts.app')
+@php
+    $tab = request('tab', 'sales');
+    $title = match($tab) {
+        'purchases' => 'Purchase History',
+        'reconciliation' => 'Reconciliation History',
+        default => 'Sales History'
+    };
+@endphp
+@section('title', $title)
+
+@section('content')
+<style>
+/* ── Tabs ── */
+.history-tabs{display:flex;gap:12px;margin-bottom:24px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;}
+.tab-btn{padding:10px 20px;border-radius:12px;font-size:.85rem;font-weight:700;text-decoration:none;color:#64748b;background:#f8fafc;border:1.5px solid #e2e8f0;transition:.2s;display:flex;align-items:center;gap:8px;}
+.tab-btn.active{background:#F5EFC0;color:#7A5C00;border-color:#D4B800;box-shadow:0 2px 8px rgba(212,184,0,.15);}
+
+/* ── Header ── */
+.inv-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+.inv-title{font-size:1.45rem;font-weight:800;color:#0f172a;letter-spacing:-.02em;margin-bottom:4px;}
+.inv-sub{font-size:.85rem;color:#64748b;}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-export{padding:8px 14px;border-radius:10px;font-size:.8rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;font-family:'Outfit',sans-serif;cursor:pointer;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;}
+.btn-export:hover{border-color:#F7DF79;color:#c9a800;background:#fffdf0;}
+.btn-export.pdf{border-color:#fca5a5;color:#dc2626;background:#fef2f2;}
+.btn-export.pdf:hover{background:#fee2e2;}
+
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:#fff;border:1px solid #f0e8a0;border-radius:14px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.04);display:flex;align-items:center;gap:12px;}
+.stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-val{font-size:1.4rem;font-weight:800;color:#0f172a;line-height:1;margin-bottom:3px;}
+.stat-label{font-size:.72rem;color:#64748b;font-weight:500;}
+
+/* ── Filter panel ── */
+.filter-panel{background:#fff;border:1px solid #f0e8a0;border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.filter-title{font-size:.78rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.filter-grid-2{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.f-label{display:block;font-size:.75rem;font-weight:600;color:#374151;margin-bottom:5px;}
+.f-input{width:100%;padding:8px 11px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:.82rem;font-family:'Outfit',sans-serif;color:#1e293b;background:#fafafa;outline:none;transition:.2s;}
+.f-input:focus{border-color:#F7DF79;background:#fff;box-shadow:0 0 0 3px rgba(247,223,121,.1);}
+.filter-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #f1f5f9;}
+.btn-apply{padding:8px 18px;border:none;background:linear-gradient(135deg,#F7DF79,#c9a800);border-radius:9px;color:#18181b;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:.2s;box-shadow:0 2px 8px rgba(247,223,121,.2);}
+.btn-apply:hover{transform:translateY(-1px);}
+.btn-clear{font-size:.8rem;color:#94a3b8;text-decoration:none;font-weight:500;transition:.15s;}
+.btn-clear:hover{color:#ef4444;}
+
+/* ── Table ── */
+.table-wrap{background:#fff;border:1px solid #f0e8a0;border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.04);}
+.inv-table{width:100%;border-collapse:collapse;}
+.inv-table thead tr{background:#f8fafc;}
+.inv-table thead th{padding:12px 18px;font-size:.7rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-bottom:1px solid #f1f5f9;}
+.inv-table tbody tr{border-bottom:1px solid #f8fafc;transition:background .15s;}
+.inv-table tbody tr:hover{background:#fafffe;}
+.inv-table tbody tr:last-child{border-bottom:none;}
+.inv-table td{padding:13px 18px;font-size:.875rem;color:#374151;vertical-align:middle;}
+.inv-no{font-family:monospace;font-size:.82rem;font-weight:700;color:#a07800;background:#fffdf0;border:1px solid #F7DF79;padding:3px 9px;border-radius:7px;}
+.pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:700;}
+.pill-green{background:#FBEFBC;color:#a07800;}
+.pill-amber{background:#fef3c7;color:#92400e;}
+.pill-red{background:#fee2e2;color:#b91c1c;}
+.pill-gray{background:#f1f5f9;color:#64748b;}
+.pill-blue{background:#dbeafe;color:#1d4ed8;}
+.action-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;color:#18181b;font-size:.78rem;font-weight:700;text-decoration:none;padding:6px 14px;border-radius:8px;transition:.15s;background:#F0F2F5;border:1.5px solid #E8EAED;white-space:nowrap;width:auto;}
+.action-link:hover{background:#E8EAED;color:#18181b;border-color:#D8DBE0;}
+
+.empty-state{padding:60px 20px;text-align:center;color:#cbd5e1;}
+.empty-state svg{margin:0 auto 14px;display:block;opacity:.3;}
+.empty-state p{font-size:.9rem;font-weight:500;}
+.pagination-wrap{padding:16px 18px;border-top:1px solid #f1f5f9;display:flex;justify-content:center;}
+
+.date-group { background: #fff; border: 1.5px solid #f0e8b0; border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
+.date-header { padding: 16px 24px; background: #fffdf0; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0e8b0; }
+.date-title { font-size: 1rem; font-weight: 800; color: #1e293b; }
+.date-summary { font-size: 0.75rem; color: #c9a800; font-weight: 700; }
+.date-content { display: none; padding: 0; }
+.date-group.active .date-content { display: block; }
+.date-group.active .drop-arrow { transform: rotate(180deg); }
+.drop-arrow { transition: 0.3s; color: #c9a800; }
+
+.toggle-group-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 16px; width: fit-content; }
+.toggle-label-text { font-size: 0.8rem; font-weight: 700; color: #475569; }
+</style>
+
+{{-- Tabs --}}
+<div class="history-tabs">
+    @if(auth()->user()->hasPermission('sales', 'view'))
+    <a href="{{ route('invoices.index', ['tab' => 'sales']) }}" class="tab-btn {{ $tab === 'sales' ? 'active' : '' }}">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        Sales History
+    </a>
+    @endif
+
+    @if(auth()->user()->hasPermission('purchases', 'view'))
+    <a href="{{ route('invoices.index', ['tab' => 'purchases']) }}" class="tab-btn {{ $tab === 'purchases' ? 'active' : '' }}">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Purchase History
+    </a>
+    @endif
+
+    @if(auth()->user()->hasPermission('reconciliation', 'view'))
+    <a href="{{ route('invoices.index', ['tab' => 'reconciliation']) }}" class="tab-btn {{ $tab === 'reconciliation' ? 'active' : '' }}">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        Reconciliation History
+    </a>
+    @endif
+</div>
+
+{{-- Header --}}
+<div class="inv-header">
+    <div>
+        <div class="inv-title">{{ $title }}</div>
+        <div class="inv-sub">View and filter historical {{ strtolower($title) }} records</div>
+    </div>
+    @if($tab === 'sales')
+    <div class="header-actions">
+        <a href="{{ route('invoices.export', request()->query()) }}" class="btn-export">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Export CSV
+        </a>
+        <a href="{{ route('invoices.export', array_merge(request()->query(), ['format'=>'pdf'])) }}" class="btn-export pdf">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Export PDF
+        </a>
+    </div>
+    @endif
+</div>
+
+{{-- Content Sections --}}
+@if($tab === 'sales')
+    {{-- Stats (Only for Sales for now) --}}
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#eff6ff;color:#3b82f6;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+                <div class="stat-val">{{ $totalInvoices }}</div>
+                <div class="stat-label">Total Invoices</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fffdf0;color:#F7DF79;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div>
+                <div class="stat-val" style="color:#c9a800;">PKR {{ number_format($totalSales, 2) }}</div>
+                <div class="stat-label">Total Sales</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#f5f3ff;color:#8b5cf6;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+                <div class="stat-val">PKR {{ $totalInvoices > 0 ? number_format($totalSales / $totalInvoices, 2) : '0.00' }}</div>
+                <div class="stat-label">Avg. Sale</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fffbeb;color:#f59e0b;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <div>
+                <div class="stat-val">{{ $periodInvoices }}</div>
+                <div class="stat-label">{{ request('period') ? ucwords(str_replace('_',' ',request('period'))) : 'Today' }}</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Filters --}}
+    <div class="filter-panel">
+        <div class="filter-title">
+            <span>Filters & View Options</span>
+        </div>
+        <form method="GET" action="{{ route('invoices.index') }}">
+            <input type="hidden" name="tab" value="sales">
+            <div class="toggle-group-wrap">
+                <input type="checkbox" name="group_by_date" value="1" {{ request('group_by_date') ? 'checked' : '' }} onchange="this.form.submit()" id="group-toggle">
+                <label for="group-toggle" class="toggle-label-text">Group by Date (Accordion View)</label>
+            </div>
+            <div class="filter-grid">
+                <div>
+                    <label class="f-label">Period</label>
+                    <select name="period" class="f-input">
+                        <option value="">All Time</option>
+                        @foreach(['today'=>'Today','yesterday'=>'Yesterday','this_week'=>'This Week','last_week'=>'Last Week','this_month'=>'This Month','last_month'=>'Last Month','this_year'=>'This Year','last_year'=>'Last Year'] as $val=>$label)
+                        <option value="{{ $val }}" {{ request('period')===$val?'selected':'' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="f-label">Date From</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-input">
+                </div>
+                <div>
+                    <label class="f-label">Date To</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-input">
+                </div>
+                <div>
+                    <label class="f-label">Payment Method</label>
+                    <select name="payment_method" class="f-input">
+                        <option value="">All Methods</option>
+                        <option value="cash" {{ request('payment_method')==='cash'?'selected':'' }}>Cash</option>
+                        <option value="card" {{ request('payment_method')==='card'?'selected':'' }}>Card</option>
+                        <option value="qr" {{ request('payment_method')==='qr'?'selected':'' }}>QR</option>
+                        <option value="split" {{ request('payment_method')==='split'?'selected':'' }}>Split</option>
+                        <option value="online" {{ request('payment_method')==='online'?'selected':'' }}>Online</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-grid-2">
+                <div>
+                    <label class="f-label">Status</label>
+                    <select name="status" class="f-input">
+                        <option value="">All Status</option>
+                        <option value="paid" {{ request('status')==='paid'?'selected':'' }}>Paid</option>
+                        <option value="pending" {{ request('status')==='pending'?'selected':'' }}>Pending</option>
+                        <option value="cancelled" {{ request('status')==='cancelled'?'selected':'' }}>Cancelled</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="f-label">Customer Name</label>
+                    <input type="text" name="customer" value="{{ request('customer') }}" class="f-input" placeholder="Search name…">
+                </div>
+                <div>
+                    <label class="f-label">Customer Phone</label>
+                    <input type="text" name="customer_phone" value="{{ request('customer_phone') }}" class="f-input" placeholder="Search phone…">
+                </div>
+                <div>
+                    <label class="f-label">Invoice #</label>
+                    <input type="text" name="invoice_no" value="{{ request('invoice_no') }}" class="f-input" placeholder="e.g. INV-ABC123">
+                </div>
+            </div>
+            <div class="filter-footer">
+                <a href="{{ route('invoices.index', ['tab' => 'sales']) }}" class="btn-clear">Reset</a>
+                <button type="submit" class="btn-apply">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    @if(request('group_by_date'))
+        @foreach($invoices->groupBy(function($inv){ return $inv->created_at->format('Y-m-d'); }) as $date => $dailyInvoices)
+        <div class="date-group">
+            <div class="date-header" onclick="this.parentElement.classList.toggle('active')">
+                <div class="date-info">
+                    <span class="date-title">{{ \Carbon\Carbon::parse($date)->format('M d, Y') }}</span>
+                    <span style="margin-left:12px; color:#94a3b8; font-size:0.8rem;">({{ $dailyInvoices->count() }} Invoices)</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <span class="date-summary">PKR {{ number_format($dailyInvoices->sum('payable_amount'), 2) }}</span>
+                    <div class="drop-arrow">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="date-content">
+                <table class="inv-table">
+                    <tbody>
+                        @foreach($dailyInvoices as $invoice)
+                        <tr>
+                            <td style="width:120px;"><span class="inv-no">{{ $invoice->invoice_no }}</span></td>
+                            <td>
+                                <div style="font-weight:600;color:#1e293b;">
+                                    {{ $invoice->customer ? $invoice->customer->name : ($invoice->user->name ?? 'Walk-in') }}
+                                </div>
+                            </td>
+                            <td style="font-weight:800;color:#c9a800; text-align:right;">PKR {{ number_format($invoice->payable_amount, 2) }}</td>
+                            <td style="width:100px; text-align:center;">
+                                <span class="pill pill-green">{{ ucfirst($invoice->payment_method) }}</span>
+                            </td>
+                            <td style="width:80px; text-align:right;">
+                                <a href="{{ route('invoices.show', $invoice->id) }}" class="action-link">View</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endforeach
+    @else
+        <div class="table-wrap">
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date & Time</th>
+                        <th>Customer</th>
+                        <th>Total Sales</th>
+                        <th>Total Cost</th>
+                        <th>Profit</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($invoices as $invoice)
+                    @php 
+                        $totalCost = $invoice->totalCost(); 
+                        $profit = $invoice->payable_amount - $totalCost;
+                    @endphp
+                    <tr>
+                        <td><span class="inv-no">{{ $invoice->invoice_no }}</span></td>
+                        <td>
+                            <div style="font-weight:500;color:#1e293b;font-size:.85rem;">{{ $invoice->created_at->format('M d, Y') }}</div>
+                            <div style="font-size:.72rem;color:#94a3b8;">{{ $invoice->created_at->format('H:i') }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:600;color:#1e293b;">
+                                {{ $invoice->customer ? $invoice->customer->name : ($invoice->user->name ?? 'Walk-in') }}
+                            </div>
+                        </td>
+                        <td style="font-weight:800;color:#c9a800;">PKR {{ number_format($invoice->payable_amount, 2) }}</td>
+                        <td style="font-weight:600;color:#64748b;">PKR {{ number_format($totalCost, 2) }}</td>
+                        <td style="font-weight:800;color:{{ $profit >= 0 ? '#10b981' : '#ef4444' }};">PKR {{ number_format($profit, 2) }}</td>
+                        <td><span class="pill pill-gray">{{ ucfirst($invoice->payment_method) }}</span></td>
+                        <td><span class="pill pill-green">{{ ucfirst($invoice->status) }}</span></td>
+                        <td>
+                            <a href="{{ route('invoices.show', $invoice->id) }}" class="action-link">View</a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="9" class="empty-state">No sales records found.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+            @if($invoices->hasPages()) <div class="pagination-wrap">{{ $invoices->links() }}</div> @endif
+        </div>
+    @endif
+
+@elseif($tab === 'purchases')
+    <div class="filter-panel">
+        <div class="filter-title"><span>Filters</span></div>
+        <form method="GET" action="{{ route('invoices.index') }}">
+            <input type="hidden" name="tab" value="purchases">
+            <div class="filter-grid">
+                <div>
+                    <label class="f-label">Supplier (List)</label>
+                    <select name="supplier_id" class="f-input">
+                        <option value="">All Suppliers</option>
+                        @foreach($suppliers as $sup)
+                        <option value="{{ $sup->id }}" {{ request('supplier_id') == $sup->id ? 'selected' : '' }}>{{ $sup->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="f-label">Search Supplier Name</label>
+                    <input type="text" name="supplier_name" value="{{ request('supplier_name') }}" class="f-input" placeholder="Type name…">
+                </div>
+                <div>
+                    <label class="f-label">Date From</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-input">
+                </div>
+                <div>
+                    <label class="f-label">Date To</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-input">
+                </div>
+            </div>
+            <div class="filter-grid" style="margin-top:12px;">
+                <div>
+                    <label class="f-label">Status</label>
+                    <select name="status" class="f-input">
+                        <option value="">All Status</option>
+                        <option value="received" {{ request('status') === 'received' ? 'selected' : '' }}>Received</option>
+                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="ordered" {{ request('status') === 'ordered' ? 'selected' : '' }}>Ordered</option>
+                    </select>
+                </div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div class="filter-footer">
+                <a href="{{ route('invoices.index', ['tab' => 'purchases']) }}" class="btn-clear">Reset</a>
+                <button type="submit" class="btn-apply">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-wrap">
+        <table class="inv-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Order Date</th>
+                    <th>Supplier</th>
+                    <th>Total Cost</th>
+                    <th>Exp. Revenue</th>
+                    <th>Potential Profit</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($purchases as $pur)
+                @php
+                    $revenue = $pur->expectedRevenue();
+                    $profit = $pur->potentialProfit();
+                @endphp
+                <tr>
+                    <td><span class="inv-no">{{ $pur->purchase_order_number }}</span></td>
+                    <td>{{ $pur->order_date->format('M d, Y') }}</td>
+                    <td>
+                        <div style="font-weight:600;color:#1e293b;">{{ $pur->supplier ? $pur->supplier->name : 'Walk-in Supplier' }}</div>
+                    </td>
+                    <td style="font-weight:700;color:#64748b;">PKR {{ number_format($pur->total_amount, 2) }}</td>
+                    <td style="font-weight:800;color:#c9a800;">PKR {{ number_format($revenue, 2) }}</td>
+                    <td style="font-weight:800;color:{{ $profit >= 0 ? '#10b981' : '#ef4444' }};">PKR {{ number_format($profit, 2) }}</td>
+                    <td><span class="pill {{ $pur->status === 'received' ? 'pill-green' : 'pill-amber' }}">{{ ucfirst($pur->status) }}</span></td>
+                    <td>
+                        <a href="{{ route('purchases.show', $pur->id) }}" class="action-link">View</a>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="8" class="empty-state">No purchase records found.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        @if($purchases->hasPages()) <div class="pagination-wrap">{{ $purchases->links() }}</div> @endif
+    </div>
+
+@elseif($tab === 'reconciliation')
+    <div class="filter-panel">
+        <div class="filter-title"><span>Filters</span></div>
+        <form method="GET" action="{{ route('invoices.index') }}">
+            <input type="hidden" name="tab" value="reconciliation">
+            <div class="filter-grid">
+                <div>
+                    <label class="f-label">Date From</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-input">
+                </div>
+                <div>
+                    <label class="f-label">Date To</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-input">
+                </div>
+                <div>
+                    <label class="f-label">Status</label>
+                    <select name="status" class="f-input">
+                        <option value="">All Status</option>
+                        <option value="balanced" {{ request('status') === 'balanced' ? 'selected' : '' }}>Balanced</option>
+                        <option value="unbalanced" {{ request('status') === 'unbalanced' ? 'selected' : '' }}>Unbalanced</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-footer">
+                <a href="{{ route('invoices.index', ['tab' => 'reconciliation']) }}" class="btn-clear">Reset</a>
+                <button type="submit" class="btn-apply">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-wrap">
+        <table class="inv-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>User</th>
+                    <th>Expected Cash</th>
+                    <th>Actual Cash</th>
+                    <th>Difference</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($reconciliations as $rec)
+                <tr>
+                    <td style="font-weight:700; color:#1e293b;">{{ \Carbon\Carbon::parse($rec->date)->format('M d, Y') }}</td>
+                    <td>{{ $rec->user->name }}</td>
+                    <td>PKR {{ number_format($rec->expected_cash, 2) }}</td>
+                    <td>PKR {{ number_format($rec->actual_cash, 2) }}</td>
+                    <td style="font-weight:700; color:{{ $rec->difference < 0 ? '#ef4444' : ($rec->difference > 0 ? '#10b981' : '#c9a800') }}">
+                        PKR {{ number_format($rec->difference, 2) }}
+                    </td>
+                    <td><span class="pill {{ $rec->status === 'balanced' ? 'pill-green' : 'pill-red' }}">{{ ucfirst($rec->status) }}</span></td>
+                </tr>
+                @empty
+                <tr><td colspan="6" class="empty-state">No reconciliation records found.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        @if($reconciliations->hasPages()) <div class="pagination-wrap">{{ $reconciliations->links() }}</div> @endif
+    </div>
+@endif
+
+@endsection

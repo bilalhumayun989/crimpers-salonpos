@@ -1,0 +1,378 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+use App\Models\Invoice;
+use App\Models\Purchase;
+use App\Models\CashReconciliation;
+use App\Models\Supplier;
+use Carbon\Carbon;
+
+class InvoiceController extends Controller
+{
+    public function index(Request $request)
+    {
+        $user = auth()->user();
+        
+        // Determine the allowed tabs
+        $canViewSales = $user->hasPermission('sales', 'view');
+        $canViewPurchases = $user->hasPermission('purchases', 'view');
+        $canViewReconciliation = $user->hasPermission('reconciliation', 'view');
+
+        // Total fallback: If they have NO history permissions, block them
+        if (!$canViewSales && !$canViewPurchases && !$canViewReconciliation) {
+            abort(403, 'Access Denied: You do not have permission to view any history records.');
+        }
+
+        // Determine which tab to show
+        $tab = $request->input('tab');
+
+        // If no tab specified, pick the first one they are allowed to see
+        if (!$tab) {
+            if ($canViewSales) $tab = 'sales';
+            elseif ($canViewPurchases) $tab = 'purchases';
+            elseif ($canViewReconciliation) $tab = 'reconciliation';
+        }
+
+        // Security check: If they request a tab they aren't allowed to see, redirect to one they are
+        if ($tab === 'sales' && !$canViewSales) return redirect()->route('invoices.index');
+        if ($tab === 'purchases' && !$canViewPurchases) return redirect()->route('invoices.index');
+        if ($tab === 'reconciliation' && !$canViewReconciliation) return redirect()->route('invoices.index');
+
+        if ($tab === 'purchases') {
+            return $this->purchaseHistory($request);
+        } elseif ($tab === 'reconciliation') {
+            return $this->reconciliationHistory($request);
+        }
+
+        $query = Invoice::with(['customer', 'user', 'items.itemizable']);
+
+        // Apply date range filter
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereDate('created_at', '>=', $request->date_from)
+                  ->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Apply period filter
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $query->whereDate('created_at', Carbon::today());
+                    break;
+                case 'yesterday':
+                    $query->whereDate('created_at', Carbon::yesterday());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('created_at', [
+                        Carbon::now()->startOfWeek(),
+                        Carbon::now()->endOfWeek()
+                    ]);
+                    break;
+                case 'last_week':
+                    $query->whereBetween('created_at', [
+                        Carbon::now()->subWeek()->startOfWeek(),
+                        Carbon::now()->subWeek()->endOfWeek()
+                    ]);
+                    break;
+                case 'this_month':
+                    $query->whereMonth('created_at', Carbon::now()->month)
+                          ->whereYear('created_at', Carbon::now()->year);
+                    break;
+                case 'last_month':
+                    $query->whereMonth('created_at', Carbon::now()->subMonth()->month)
+                          ->whereYear('created_at', Carbon::now()->subMonth()->year);
+                    break;
+                case 'this_year':
+                    $query->whereYear('created_at', Carbon::now()->year);
+                    break;
+                case 'last_year':
+                    $query->whereYear('created_at', Carbon::now()->subYear()->year);
+                    break;
+            }
+        }
+
+        // Apply payment method filter
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Apply customer filter
+        if ($request->filled('customer')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            })->orWhereHas('user', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            });
+        }
+
+        // Apply customer phone filter
+        if ($request->filled('customer_phone')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('phone', 'like', '%' . $request->customer_phone . '%');
+            });
+        }
+
+        // Apply invoice number filter
+        if ($request->filled('invoice_no')) {
+            $query->where('invoice_no', 'like', '%' . $request->invoice_no . '%');
+        }
+
+        // Apply amount range filters
+        if ($request->filled('min_amount')) {
+            $query->where('payable_amount', '>=', $request->min_amount);
+        }
+        if ($request->filled('max_amount')) {
+            $query->where('payable_amount', '<=', $request->max_amount);
+        }
+
+        $invoices = $query->latest()->paginate(20)->withQueryString();
+
+        // Calculate summary statistics for filtered results
+        $totalSales = $query->sum('payable_amount');
+        $totalInvoices = $query->count();
+
+        // Calculate period invoices (for the current period if period filter is applied)
+        $periodQuery = Invoice::query();
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $periodQuery->whereDate('created_at', Carbon::today());
+                    break;
+                case 'yesterday':
+                    $periodQuery->whereDate('created_at', Carbon::yesterday());
+                    break;
+                case 'this_week':
+                    $periodQuery->whereBetween('created_at', [
+                        Carbon::now()->startOfWeek(),
+                        Carbon::now()->endOfWeek()
+                    ]);
+                    break;
+                case 'last_week':
+                    $periodQuery->whereBetween('created_at', [
+                        Carbon::now()->subWeek()->startOfWeek(),
+                        Carbon::now()->subWeek()->endOfWeek()
+                    ]);
+                    break;
+                case 'this_month':
+                    $periodQuery->whereMonth('created_at', Carbon::now()->month)
+                               ->whereYear('created_at', Carbon::now()->year);
+                    break;
+                case 'last_month':
+                    $periodQuery->whereMonth('created_at', Carbon::now()->subMonth()->month)
+                               ->whereYear('created_at', Carbon::now()->subMonth()->year);
+                    break;
+                case 'this_year':
+                    $periodQuery->whereYear('created_at', Carbon::now()->year);
+                    break;
+                case 'last_year':
+                    $periodQuery->whereYear('created_at', Carbon::now()->subYear()->year);
+                    break;
+            }
+        } else {
+            // If no period filter, show today's count
+            $periodQuery->whereDate('created_at', Carbon::today());
+        }
+        $periodInvoices = $periodQuery->count();
+
+        return view('invoices.index', compact('invoices', 'totalSales', 'totalInvoices', 'periodInvoices'));
+    }
+
+    /**
+     * USER DEMAND: "no ticket no recetp i want to print"
+     * Consolidated all viewing logic to a professional administrative layout.
+     * Thermal ticket view (pos.ticket) is no longer utilized.
+     */
+    public function show(Invoice $invoice)
+    {
+        $invoice->load(['items.itemizable', 'customer', 'user']);
+        return view('invoices.history-detail', compact('invoice'));
+    }
+
+    public function historyShow(Invoice $invoice)
+    {
+        $invoice->load(['items.itemizable', 'customer', 'user']);
+        return view('invoices.history-detail', compact('invoice'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = Invoice::with(['customer', 'user']);
+
+        // Apply same filters as index method
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereDate('created_at', '>=', $request->date_from)
+                  ->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Apply period filter
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $query->whereDate('created_at', Carbon::today());
+                    break;
+                case 'yesterday':
+                    $query->whereDate('created_at', Carbon::yesterday());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('created_at', [
+                        Carbon::now()->startOfWeek(),
+                        Carbon::now()->endOfWeek()
+                    ]);
+                    break;
+                case 'last_week':
+                    $query->whereBetween('created_at', [
+                        Carbon::now()->subWeek()->startOfWeek(),
+                        Carbon::now()->subWeek()->endOfWeek()
+                    ]);
+                    break;
+                case 'this_month':
+                    $query->whereMonth('created_at', Carbon::now()->month)
+                          ->whereYear('created_at', Carbon::now()->year);
+                    break;
+                case 'last_month':
+                    $query->whereMonth('created_at', Carbon::now()->subMonth()->month)
+                          ->whereYear('created_at', Carbon::now()->subMonth()->year);
+                    break;
+                case 'this_year':
+                    $query->whereYear('created_at', Carbon::now()->year);
+                    break;
+                case 'last_year':
+                    $query->whereYear('created_at', Carbon::now()->subYear()->year);
+                    break;
+            }
+        }
+
+        // Apply payment method filter
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Apply customer filter
+        if ($request->filled('customer')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            })->orWhereHas('user', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            });
+        }
+
+        // Apply invoice number filter
+        if ($request->filled('invoice_no')) {
+            $query->where('invoice_no', 'like', '%' . $request->invoice_no . '%');
+        }
+
+        // Apply amount range filters
+        if ($request->filled('min_amount')) {
+            $query->where('payable_amount', '>=', $request->min_amount);
+        }
+        if ($request->filled('max_amount')) {
+            $query->where('payable_amount', '<=', $request->max_amount);
+        }
+
+        $invoices = $query->latest()->get();
+
+        if ($request->format === 'pdf') {
+            $pdf = app('dompdf.wrapper');
+            $pdf->loadView('invoices.export-pdf', compact('invoices'));
+            return $pdf->download('sales-report-' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        // CSV Export
+        $filename = 'sales-report-' . now()->format('Y-m-d') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($invoices) {
+            $file = fopen('php://output', 'w');
+
+            // CSV headers
+            fputcsv($file, [
+                'Invoice #',
+                'Date',
+                'Customer',
+                'Total Amount',
+                'Payment Method',
+                'Status',
+                'Items'
+            ]);
+
+            // CSV data
+            foreach ($invoices as $invoice) {
+                fputcsv($file, [
+                    $invoice->invoice_no,
+                    $invoice->created_at->format('Y-m-d H:i:s'),
+                    $invoice->customer ? $invoice->customer->name : ($invoice->user->name ?? 'Walk-in'),
+                    number_format($invoice->payable_amount, 2),
+                    $invoice->payment_method,
+                    $invoice->status,
+                    $invoice->items->count() . ' items'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+    public function purchaseHistory(Request $request)
+    {
+        $query = Purchase::with(['supplier', 'purchaseItems.product']);
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereDate('order_date', '>=', $request->date_from)
+                  ->whereDate('order_date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+
+        if ($request->filled('supplier_name')) {
+            $query->whereHas('supplier', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->supplier_name . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $purchases = $query->latest('order_date')->paginate(20)->withQueryString();
+        $suppliers = Supplier::where('is_active', true)->get();
+
+        return view('invoices.index', compact('purchases', 'suppliers'));
+    }
+
+    public function reconciliationHistory(Request $request)
+    {
+        $query = CashReconciliation::with('user');
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereDate('date', '>=', $request->date_from)
+                  ->whereDate('date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $reconciliations = $query->latest('date')->paginate(20)->withQueryString();
+
+        return view('invoices.index', compact('reconciliations'));
+    }
+}

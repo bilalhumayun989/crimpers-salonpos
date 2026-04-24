@@ -1,0 +1,653 @@
+@extends('layouts.app')
+@section('title', 'Dashboard')
+
+@section('content')
+<style>
+:root{--y1:#F7DF79;--y2:#FBEFBC;--yd:#c9a800;--yk:#a07800;--ybg:#fffdf0;}
+
+/* ── Hero Banner ── */
+.dash-hero{background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);border-radius:20px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;overflow:hidden;position:relative;}
+.dash-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(247,223,121,.18) 0%,transparent 70%);}
+.dash-hero::after{content:'';position:absolute;bottom:-60px;left:30%;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(247,223,121,.08) 0%,transparent 70%);}
+.dash-hero-left{position:relative;z-index:1;}
+.dash-hero-greeting{font-size:.78rem;font-weight:700;color:var(--yd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.dash-hero-title{font-size:1.7rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin:0 0 6px;}
+.dash-hero-sub{font-size:.88rem;color:#a1a1aa;margin:0;}
+.dash-hero-right{position:relative;z-index:1;text-align:right;flex-shrink:0;}
+.dash-hero-date{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 20px;backdrop-filter:blur(8px);}
+.dash-hero-date-day{font-size:1.8rem;font-weight:800;color:var(--y1);line-height:1;}
+.dash-hero-date-rest{font-size:.78rem;color:#a1a1aa;margin-top:3px;}
+
+/* ── Stat Cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:#fff;border:1.5px solid #e9e0c0;border-radius:18px;padding:20px;box-shadow:0 2px 10px rgba(199,168,0,.07);transition:.25s;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:18px 18px 0 0;}
+.stat-card.yellow::before{background:linear-gradient(90deg,var(--y1),var(--yd));}
+.stat-card.blue::before{background:linear-gradient(90deg,#60a5fa,#3b82f6);}
+.stat-card.purple::before{background:linear-gradient(90deg,#a78bfa,#7c3aed);}
+.stat-card.orange::before{background:linear-gradient(90deg,#fb923c,#ea580c);}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(199,168,0,.14);}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-icon.yellow{background:var(--y2);color:var(--yk);}
+.stat-icon.blue{background:#dbeafe;color:#2563eb;}
+.stat-icon.purple{background:#ede9fe;color:#6d28d9;}
+.stat-icon.orange{background:#ffedd5;color:#c2410c;}
+.stat-label{font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;}
+.stat-val{font-size:1.65rem;font-weight:800;color:#0f172a;line-height:1;margin-bottom:4px;}
+.stat-sub{font-size:.75rem;color:#94a3b8;}
+
+/* ── Main Grid ── */
+.dash-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;}
+@media(max-width:1100px){.dash-grid{grid-template-columns:1fr;}}
+
+/* ── Panel ── */
+.panel{background:#fff;border:1.5px solid #e9e0c0;border-radius:18px;overflow:hidden;margin-bottom:20px;box-shadow:0 2px 10px rgba(199,168,0,.07);}
+.panel-head{padding:16px 22px;background:var(--ybg);border-bottom:1.5px solid #f0e8b0;display:flex;align-items:center;justify-content:space-between;}
+.panel-head h3{font-size:.9rem;font-weight:700;color:#18181b;margin:0;}
+.panel-link{font-size:.75rem;font-weight:700;color:var(--yk);text-decoration:none;transition:.15s;}
+.panel-link:hover{color:var(--yd);}
+.panel-body{padding:20px;}
+
+/* ── Sales Table ── */
+.dash-table{width:100%;border-collapse:collapse;}
+.dash-table th{padding:11px 16px;font-size:.7rem;font-weight:700;color:var(--yk);text-transform:uppercase;letter-spacing:.06em;text-align:left;background:var(--ybg);border-bottom:1.5px solid #f0e8b0;}
+.dash-table td{padding:13px 16px;border-bottom:1px solid #faf6e8;font-size:.85rem;color:#374151;}
+.dash-table tr:last-child td{border-bottom:none;}
+.dash-table tr:hover td{background:#fffdf5;}
+.inv-amount{font-weight:800;color:var(--yk);}
+
+/* ── Badges ── */
+.badge{padding:3px 9px;border-radius:99px;font-size:.65rem;font-weight:700;text-transform:uppercase;}
+.badge-cash{background:var(--y2);color:var(--yk);}
+.badge-card{background:#dbeafe;color:#1d4ed8;}
+.badge-split{background:#ede9fe;color:#5b21b6;}
+.badge-done{background:var(--y2);color:var(--yk);}
+.badge-pending{background:#fef3c7;color:#92400e;}
+.badge-info{background:#dbeafe;color:#1e40af;}
+.badge-success{background:var(--y2);color:var(--yk);}
+.badge-warn{background:#fef3c7;color:#92400e;}
+.badge-danger{background:#fee2e2;color:#991b1b;}
+
+/* ── Appointment Rows ── */
+.appt-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #faf6e8;}
+.appt-row:last-child{border-bottom:none;}
+.appt-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--y1),var(--yd));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#18181b;flex-shrink:0;}
+.appt-name{font-weight:700;color:#1e293b;font-size:.875rem;}
+.appt-meta{font-size:.72rem;color:#94a3b8;margin-top:1px;}
+
+/* ── Inventory Bar ── */
+.inv-item{margin-bottom:14px;}
+.inv-item:last-child{margin-bottom:0;}
+.inv-top{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:5px;}
+.inv-name{font-weight:600;color:#1e293b;}
+.inv-count{color:#94a3b8;}
+.inv-bar{height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;}
+.inv-fill{height:100%;border-radius:4px;transition:width .4s;}
+
+/* ── Status Panel ── */
+.status-panel{background:linear-gradient(160deg,#1a1a1a,#2a2a2a);border:none;border-radius:18px;overflow:hidden;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.status-panel .panel-head{background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);}
+.status-panel .panel-head h3{color:#fff;}
+.status-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.85rem;color:#d4d4d8;}
+.status-row:last-child{border-bottom:none;}
+.status-val{font-weight:700;color:#fff;}
+
+/* ── Quick Actions ── */
+.qa-link{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;background:#fff;border:1.5px solid #e9e0c0;text-decoration:none;margin-bottom:10px;transition:.2s;}
+.qa-link:hover{border-color:var(--yd);background:var(--ybg);transform:translateX(4px);}
+.qa-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qa-icon.yellow{background:var(--y2);color:var(--yk);}
+.qa-icon.blue{background:#dbeafe;color:#2563eb;}
+.qa-icon.orange{background:#ffedd5;color:#c2410c;}
+.qa-icon.slate{background:#f1f5f9;color:#475569;}
+.qa-text strong{display:block;font-size:.85rem;font-weight:700;color:#1e293b;}
+.qa-text span{font-size:.7rem;color:#94a3b8;}
+.qa-arrow{margin-left:auto;color:#d4d4d8;flex-shrink:0;}
+
+/* ── Analytics Chart ── */
+.chart-panel{background:#fff;border:1.5px solid #e9e0c0;border-radius:20px;padding:24px;margin-top:24px;box-shadow:0 4px 20px rgba(199,168,0,.08);}
+.chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px;}
+.chart-tabs{display:flex;background:#f8fafc;padding:4px;border-radius:12px;border:1px solid #e2e8f0;}
+.chart-tab{padding:8px 16px;font-size:.78rem;font-weight:700;color:#64748b;border-radius:10px;cursor:pointer;transition:.2s;border:none;background:transparent;}
+.chart-tab.active{background:#fff;color:var(--yk);box-shadow:0 2px 8px rgba(0,0,0,.05);border:1px solid #f0e8b0;}
+.chart-peak{font-size:.72rem;font-weight:700;color:#16a34a;background:#dcfce7;padding:4px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:4px;}
+</style>
+
+{{-- Hero Banner --}}
+<div class="dash-hero">
+    <div class="dash-hero-left">
+        <div class="dash-hero-greeting">
+            {{ now()->hour < 12 ? '🌅 Good Morning' : (now()->hour < 17 ? '☀️ Good Afternoon' : '🌙 Good Evening') }}
+        </div>
+        <h1 class="dash-hero-title">Dashboard Overview</h1>
+        <p class="dash-hero-sub">Here's what's happening at your salon today.</p>
+    </div>
+    <div class="dash-hero-right">
+        <div class="dash-hero-date">
+            <div class="dash-hero-date-day">{{ now()->format('d') }}</div>
+            <div class="dash-hero-date-rest">{{ now()->format('M Y') }} &nbsp;·&nbsp; {{ now()->format('l') }}</div>
+        </div>
+    </div>
+</div>
+
+@if(count($lateAppointments) > 0)
+<div style="background:#fee2e2; border:1.5px solid #fca5a5; border-radius:18px; padding:18px 24px; margin-bottom:24px; display:flex; align-items:center; gap:16px; animation: pulse-red 2s infinite;">
+    <div style="width:42px; height:42px; background:#fff; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#dc2626; flex-shrink:0; box-shadow:0 4px 12px rgba(220,38,38,0.1);">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div style="flex:1;">
+        <h4 style="margin:0; font-size:.9rem; font-weight:800; color:#991b1b;">Late Appointment Alert</h4>
+        <p style="margin:2px 0 0; font-size:.8rem; color:#b91c1c;">{{ count($lateAppointments) }} appointment(s) discarded today due to 10+ minute delay.</p>
+    </div>
+    <a href="{{ route('appointments.index') }}" style="padding:8px 16px; background:#dc2626; color:#fff; border-radius:10px; font-size:.75rem; font-weight:700; text-decoration:none; transition:.2s;">Review All</a>
+</div>
+<style>
+@keyframes pulse-red { 0% { box-shadow:0 0 0 0 rgba(220,38,38,0.2); } 70% { box-shadow:0 0 0 10px rgba(220,38,38,0); } 100% { box-shadow:0 0 0 0 rgba(220,38,38,0); } }
+</style>
+@endif
+
+{{-- Stat Cards --}}
+<div class="stats-grid">
+    <div class="stat-card yellow">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Today's Revenue</div>
+                <div class="stat-val">PKR {{ number_format($totalSalesToday, 0) }}</div>
+                <div class="stat-sub">Total sales today</div>
+            </div>
+            <div class="stat-icon yellow">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Appointments</div>
+                <div class="stat-val">{{ $totalAppointmentsToday }}</div>
+                <div class="stat-sub">Scheduled today</div>
+            </div>
+            <div class="stat-icon blue">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Staff Present</div>
+                <div class="stat-val">{{ $staffPresentToday }}<span style="font-size:1rem;color:#94a3b8;font-weight:600;"> / {{ $totalStaff }}</span></div>
+                <div class="stat-sub">On duty today</div>
+            </div>
+            <div class="stat-icon purple">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card orange">
+        <div class="stat-top">
+            <div>
+                <div class="stat-label">Low Stock Items</div>
+                <div class="stat-val" style="{{ $lowStockProducts > 0 ? 'color:#c2410c;' : '' }}">{{ $lowStockProducts }}</div>
+                <div class="stat-sub">{{ $lowStockProducts > 0 ? 'Need restocking' : 'All stocked up' }}</div>
+            </div>
+            <div class="stat-icon orange">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Main Grid --}}
+<div class="dash-grid">
+    <div>
+        {{-- Recent Sales --}}
+        <div class="panel">
+            <div class="panel-head">
+                <h3>
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:6px;color:var(--yk);"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    Recent Sales
+                </h3>
+                <a href="{{ route('invoices.index') }}" class="panel-link">View All →</a>
+            </div>
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Customer</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recentInvoices as $inv)
+                    <tr>
+                        <td><strong style="color:#18181b;">{{ $inv->invoice_no }}</strong></td>
+                        <td>{{ $inv->user ? $inv->user->name : 'Walk-in' }}</td>
+                        <td>
+                            <span class="badge badge-{{ strtolower($inv->payment_method) == 'cash' ? 'cash' : (strtolower($inv->payment_method) == 'card' ? 'card' : 'split') }}">
+                                {{ strtoupper($inv->payment_method) }}
+                            </span>
+                        </td>
+                        <td><span class="inv-amount">PKR {{ number_format($inv->payable_amount, 0) }}</span></td>
+                        <td style="color:#94a3b8;font-size:.8rem;">{{ $inv->created_at->format('g:i A') }}</td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">No sales recorded today.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            {{-- Inventory Health --}}
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:5px;color:var(--yk);"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Inventory Health
+                    </h3>
+                    <span class="badge {{ $lowStockProducts > 0 ? 'badge-danger' : 'badge-done' }}">{{ $lowStockProducts }} Low</span>
+                </div>
+                <div class="panel-body">
+                    @forelse($lowStockList as $p)
+                    <div class="inv-item">
+                        <div class="inv-top">
+                            <span class="inv-name">{{ $p->name }}</span>
+                            <span class="inv-count">{{ $p->current_stock }} / {{ $p->min_stock_level }}</span>
+                        </div>
+                        <div class="inv-bar">
+                            @php $pct = min(100, ($p->current_stock / max(1, $p->min_stock_level)) * 100); @endphp
+                            <div class="inv-fill" style="width:{{ $pct }}%;background:{{ $pct < 50 ? '#ef4444' : '#f59e0b' }};"></div>
+                        </div>
+                    </div>
+                    @empty
+                    <div style="text-align:center;padding:24px;color:var(--yk);font-weight:700;font-size:.85rem;">
+                        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;margin:0 auto 8px;"><polyline points="20 6 9 17 4 12"/></svg>
+                        All stock levels are healthy!
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Recent Appointments --}}
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:5px;color:var(--yk);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Appointments
+                    </h3>
+                    <a href="{{ route('appointments.index') }}" class="panel-link">View →</a>
+                </div>
+                <div class="panel-body" style="padding-top:12px;">
+                    @forelse($recentAppointments as $appt)
+                    <div class="appt-row row-{{ $appt->status }}" id="appt-row-{{ $appt->id }}">
+                        <div class="appt-avatar">{{ strtoupper(substr($appt->customer_name, 0, 1)) }}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div class="appt-name">{{ $appt->customer_name }}</div>
+                            <div class="appt-meta">{{ $appt->service->name }} · {{ $appt->staff->name }} · {{ $appt->appointment_date->format('M j') }}</div>
+                        </div>
+                        <span class="badge {{ $appt->status == 'completed' ? 'badge-done' : 'badge-info' }}">{{ $appt->status }}</span>
+                    </div>
+                    @empty
+                    <div style="text-align:center;padding:24px;color:#94a3b8;font-size:.85rem;">No appointments today.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Right Sidebar --}}
+    <div>
+        {{-- Operational Status --}}
+        <div class="status-panel">
+            <div class="panel-head">
+                <h3>
+                    <svg width="14" height="14" fill="none" stroke="#F7DF79" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:6px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Operational Status
+                </h3>
+            </div>
+            <div class="panel-body">
+                <div class="status-row">
+                    <span>Reconciliation</span>
+                    <span class="badge {{ $reconciliationDone ? 'badge-done' : 'badge-warn' }}">{{ $reconciliationDone ? 'Done' : 'Pending' }}</span>
+                </div>
+                <div class="status-row">
+                    <span>Active Coupons</span>
+                    <span class="status-val">{{ $activeCoupons }}</span>
+                </div>
+                <div class="status-row">
+                    <span>Active Discounts</span>
+                    <span class="status-val">{{ $activeDiscounts }}</span>
+                </div>
+                <div style="margin-top:18px;">
+                    @if(!$reconciliationDone)
+                    <a href="{{ route('reconciliation.index') }}" style="display:block;padding:11px;background:linear-gradient(135deg,var(--y1),var(--yd));border-radius:11px;text-align:center;text-decoration:none;font-weight:700;font-size:.85rem;color:#18181b;box-shadow:0 3px 12px rgba(199,168,0,.3);">
+                        Close Day Now
+                    </a>
+                    @else
+                    <div style="text-align:center;color:var(--y1);font-size:.8rem;font-weight:700;padding:8px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                        Day reconciled successfully
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Quick Actions --}}
+        <div style="font-size:.68rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px;">Quick Actions</div>
+
+        <a href="{{ route('pos.index') }}" class="qa-link">
+            <div class="qa-icon yellow">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="qa-text"><strong>POS Terminal</strong><span>New client checkout</span></div>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="qa-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="{{ route('appointments.index') }}" class="qa-link">
+            <div class="qa-icon blue">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="qa-text"><strong>Appointments</strong><span>Schedule & manage</span></div>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="qa-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="{{ route('staff.index') }}" class="qa-link">
+            <div class="qa-icon slate">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="qa-text"><strong>Staff Management</strong><span>Attendance & performance</span></div>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="qa-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="{{ route('products.index') }}" class="qa-link">
+            <div class="qa-icon orange">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <div class="qa-text"><strong>Inventory</strong><span>Products & stock levels</span></div>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="qa-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+
+        <a href="{{ route('reports.index') }}" class="qa-link">
+            <div class="qa-icon yellow">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="qa-text"><strong>Reports</strong><span>Sales & analytics</span></div>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="qa-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════
+     LIVE APPOINTMENT REMINDER NOTIFICATION SYSTEM
+     ═══════════════════════════════════════════════ --}}
+
+<!-- Notification stack container -->
+<div id="appt-notif-stack" style="position:fixed;top:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:14px;pointer-events:none;"></div>
+
+<style>
+@keyframes notif-in  { from { opacity:0; transform:translateX(60px) scale(.95); } to { opacity:1; transform:translateX(0) scale(1); } }
+@keyframes notif-out { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(60px); } }
+@keyframes notif-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(247,223,121,.5);} 70%{box-shadow:0 0 0 14px rgba(247,223,121,0);} }
+.appt-notif {
+    pointer-events:auto;
+    width:340px;
+    background:#fff;
+    border-radius:18px;
+    border:2px solid #F7DF79;
+    box-shadow:0 8px 32px rgba(0,0,0,.18);
+    padding:20px 22px 18px;
+    animation: notif-in .4s cubic-bezier(.22,1,.36,1) both, notif-pulse 2s 1s infinite;
+    position:relative;
+    overflow:hidden;
+}
+.appt-notif::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#F7DF79,#c9a800);}
+.appt-notif-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.appt-notif-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F7DF79,#c9a800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.appt-notif-title{font-weight:800;font-size:.95rem;color:#0f172a;}
+.appt-notif-sub{font-size:.75rem;color:#64748b;margin-top:1px;}
+.appt-notif-details{background:#fffdf0;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:#374151;line-height:1.7;}
+.appt-notif-details strong{color:#0f172a;}
+.appt-notif-timer{font-size:.72rem;font-weight:700;color:#dc2626;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.appt-notif-timer svg{flex-shrink:0;}
+.appt-notif-actions{display:flex;gap:10px;}
+.appt-notif-btn-yes{flex:1;padding:9px;background:linear-gradient(135deg,#F7DF79,#c9a800);border:none;border-radius:10px;font-weight:800;font-size:.8rem;color:#18181b;cursor:pointer;transition:.2s;}
+.appt-notif-btn-yes:hover{transform:translateY(-1px);}
+.appt-notif-btn-no{flex:1;padding:9px;background:#fff;border:1.5px solid #fca5a5;border-radius:10px;font-weight:700;font-size:.8rem;color:#dc2626;cursor:pointer;transition:.2s;}
+.appt-notif-btn-no:hover{background:#fef2f2;}
+.appt-notif-dismiss{position:absolute;top:10px;right:12px;background:none;border:none;font-size:1rem;color:#94a3b8;cursor:pointer;line-height:1;}
+</style>
+
+<script>
+const _seenNotifs = new Set();
+const _csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+function createNotification(appt) {
+    const stack = document.getElementById('appt-notif-stack');
+    const el = document.createElement('div');
+    el.className = 'appt-notif';
+    el.id = 'notif-' + appt.id;
+
+    // 10-minute countdown (600 seconds)
+    let secondsLeft = 600;
+
+    el.innerHTML = `
+        <button class="appt-notif-dismiss" onclick="dismissNotif(${appt.id})" title="Dismiss">✕</button>
+        <div class="appt-notif-head">
+            <div class="appt-notif-icon">
+                <svg width="20" height="20" fill="none" stroke="#18181b" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+                <div class="appt-notif-title">⏰ Appointment Starting Now!</div>
+                <div class="appt-notif-sub">Customer is expected at reception</div>
+            </div>
+        </div>
+        <div class="appt-notif-details">
+            <div><strong>👤 Customer:</strong> ${appt.customer_name}</div>
+            <div><strong>✂️ Service:</strong> ${appt.service}</div>
+            <div><strong>👨‍💼 Staff:</strong> ${appt.staff}</div>
+            <div><strong>🕐 Time:</strong> ${appt.start_time}</div>
+        </div>
+        <div class="appt-notif-timer" id="notif-timer-${appt.id}">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Auto-discards in <span id="notif-countdown-${appt.id}">10:00</span>
+        </div>
+        <div class="appt-notif-actions">
+            <button class="appt-notif-btn-yes" onclick="markArrived(${appt.id})">✅ Yes, Customer Arrived!</button>
+            <button class="appt-notif-btn-no" onclick="dismissNotif(${appt.id})">❌ Not Here</button>
+        </div>
+    `;
+
+    stack.appendChild(el);
+
+    // Countdown timer
+    const interval = setInterval(() => {
+        secondsLeft--;
+        const mins = String(Math.floor(secondsLeft / 60)).padStart(2,'0');
+        const secs = String(secondsLeft % 60).padStart(2,'0');
+        const cdEl = document.getElementById('notif-countdown-' + appt.id);
+        if (cdEl) cdEl.textContent = mins + ':' + secs;
+
+        if (secondsLeft <= 0) {
+            clearInterval(interval);
+            dismissNotif(appt.id);
+        }
+    }, 1000);
+
+    // Store interval reference for cleanup
+    el.dataset.interval = interval;
+}
+
+function dismissNotif(id) {
+    const el = document.getElementById('notif-' + id);
+    if (!el) return;
+    clearInterval(el.dataset.interval);
+    el.style.animation = 'notif-out .3s ease forwards';
+    setTimeout(() => el.remove(), 320);
+}
+
+function markArrived(id) {
+    fetch('/appointments/' + id + '/mark-arrived', {
+        method: 'PATCH',
+        headers: { 'X-CSRF-TOKEN': _csrfToken, 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(() => dismissNotif(id))
+    .catch(() => dismissNotif(id));
+}
+
+function pollDueAppointments() {
+    fetch('/appointments/due-now')
+    .then(r => r.json())
+    .then(appointments => {
+        appointments.forEach(appt => {
+            if (!_seenNotifs.has(appt.id)) {
+                _seenNotifs.add(appt.id);
+                createNotification(appt);
+            }
+        });
+    })
+    .catch(e => console.warn('Appointment poll failed:', e));
+}
+
+// Poll immediately then every 60 seconds
+pollDueAppointments();
+setInterval(pollDueAppointments, 60000);
+</script>
+
+{{-- Analytics Section --}}
+<div class="chart-panel">
+    <div class="chart-head">
+        <div>
+            <h3 style="font-size:1.1rem; font-weight:800; color:#1e293b; margin:0;">Revenue Performance</h3>
+            <p style="font-size:.8rem; color:#94a3b8; margin:2px 0 0;">Visualizing sales growth and peak activity</p>
+        </div>
+        <div class="chart-tabs">
+            <button class="chart-tab active" onclick="updateChart('daily', this)">Daily</button>
+            <button class="chart-tab" onclick="updateChart('weekly', this)">Weekly</button>
+            <button class="chart-tab" onclick="updateChart('monthly', this)">Monthly</button>
+        </div>
+    </div>
+    
+    <div style="position:relative; height:320px;">
+        <canvas id="salesChart"></canvas>
+    </div>
+    
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between;">
+        <div id="peak-info" class="chart-peak">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            Peak Sales: <span id="peak-val">PKR 0</span> (<span id="peak-label">-</span>)
+        </div>
+        <div style="font-size:.75rem; color:#94a3b8; font-weight:600;">Updated real-time from POS sales</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const dailyData = @json($dailySales);
+const weeklyData = @json($weeklySales);
+const monthlyData = @json($monthlySales);
+
+let currentChart = null;
+
+function initChart() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    // Create gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(247, 223, 121, 0.4)');
+    gradient.addColorStop(1, 'rgba(247, 223, 121, 0)');
+
+    currentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyData.map(d => d.label),
+            datasets: [{
+                label: 'Sales Revenue',
+                data: dailyData.map(d => d.value),
+                borderColor: '#c9a800',
+                borderWidth: 3,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#c9a800',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'PKR ' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9', drawBorder: false },
+                    ticks: {
+                        font: { size: 11, weight: '600' },
+                        color: '#94a3b8',
+                        callback: value => 'PKR ' + value.toLocaleString()
+                    }
+                },
+                x: {
+                    grid: { display: false, drawBorder: false },
+                    ticks: {
+                        font: { size: 11, weight: '700' },
+                        color: '#64748b'
+                    }
+                }
+            }
+        }
+    });
+    
+    updatePeakInfo(dailyData);
+}
+
+function updateChart(type, btn) {
+    // Update tabs
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    let data;
+    if (type === 'daily') data = dailyData;
+    else if (type === 'weekly') data = weeklyData;
+    else data = monthlyData;
+
+    currentChart.data.labels = data.map(d => d.label);
+    currentChart.data.datasets[0].data = data.map(d => d.value);
+    currentChart.update();
+    
+    updatePeakInfo(data);
+}
+
+function updatePeakInfo(data) {
+    if (!data || !data.length) return;
+    const max = data.reduce((prev, current) => (prev.value > current.value) ? prev : current);
+    document.getElementById('peak-val').textContent = 'PKR ' + max.value.toLocaleString();
+    document.getElementById('peak-label').textContent = max.label;
+}
+
+document.addEventListener('DOMContentLoaded', initChart);
+</script>
+@endsection
