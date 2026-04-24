@@ -13,8 +13,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Default Branch
+        \App\Models\Branch::firstOrCreate(['id' => 1], [
+            'name' => 'Main Branch',
+            'address' => 'Headquarters',
+            'phone' => '0000000000',
+            'opening_time' => '09:00:00',
+            'closing_time' => '21:00:00',
+            'is_active' => true
+        ]);
         // Admin
-        User::updateOrCreate(['email' => 'admin@gmail.com'], [
+        User::updateOrCreate(['email' => 'Sa40560@gmail.com'], [
             'name' => 'Admin Manager',
             'password' => bcrypt('12345678'),
             'role' => 'admin',
