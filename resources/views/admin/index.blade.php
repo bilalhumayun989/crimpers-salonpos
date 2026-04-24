@@ -117,8 +117,14 @@
 {{-- Hero Banner --}}
 <div class="dash-hero">
     <div class="dash-hero-left">
-        <div class="dash-hero-greeting">
-            {{ now()->hour < 12 ? '🌅 Good Morning' : (now()->hour < 17 ? '☀️ Good Afternoon' : '🌙 Good Evening') }}
+        <div class="dash-hero-greeting" style="display:flex;align-items:center;gap:6px;">
+            @if(now()->hour < 12)
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color:#f59e0b;"><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M17.657 6.343l-1.414 1.414M7.757 16.243l-1.414 1.414M17.657 17.657l-1.414-1.414M7.757 7.757L6.343 6.343"/><circle cx="12" cy="12" r="5"/></svg> Good Morning
+            @elseif(now()->hour < 17)
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color:#f59e0b;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> Good Afternoon
+            @else
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color:#60a5fa;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> Good Evening
+            @endif
         </div>
         <h1 class="dash-hero-title">Dashboard Overview</h1>
         <p class="dash-hero-sub">Here's what's happening at your salon today.</p>
