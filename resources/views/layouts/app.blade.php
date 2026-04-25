@@ -759,7 +759,7 @@ document.getElementById('ga-btn-late').addEventListener('click', () => updateGlo
 document.getElementById('ga-btn-discard').addEventListener('click', () => updateGlobalStatus('discarded'));
 
 function pollArrivingAppointments() {
-    fetch('/appointments/due-now', {
+    fetch('{{ url("/appointments/due-now") }}', {
         headers: { 'Accept': 'application/json' }
     })
     .then(r => {

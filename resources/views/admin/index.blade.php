@@ -497,7 +497,7 @@ function dismissNotif(id) {
 }
 
 function markArrived(id) {
-    fetch('/appointments/' + id + '/mark-arrived', {
+    fetch('{{ url("/appointments") }}/' + id + '/mark-arrived', {
         method: 'PATCH',
         headers: { 'X-CSRF-TOKEN': _csrfToken, 'Content-Type': 'application/json' }
     })
@@ -507,7 +507,7 @@ function markArrived(id) {
 }
 
 function pollDueAppointments() {
-    fetch('/appointments/due-now')
+    fetch('{{ url("/appointments/due-now") }}')
     .then(r => r.json())
     .then(appointments => {
         appointments.forEach(appt => {

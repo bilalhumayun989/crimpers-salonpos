@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initialView: 'timeGridWeek',
         height: 'calc(100vh - 220px)',
         headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,timeGridDay' },
-        events: '/appointments/calendar/events',
+        events: '{{ url("/appointments/calendar/events") }}',
         editable: true,
         nowIndicator: true,
         slotMinTime: '{{ $openingTime }}',
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
         eventDrop: function(info) { updateTime(info.event, info.revert); },
         eventResize: function(info) { updateTime(info.event, info.revert); },
         eventClick: function(info) {
-            window.location.href = '/appointments/' + info.event.id + '/edit';
+            window.location.href = '{{ url("/appointments") }}/' + info.event.id + '/edit';
         }
     });
     calendar.render();
@@ -173,7 +173,7 @@ function filterStaff() {
 }
 
 function updateTime(event, revert) {
-    fetch('/appointments/' + event.id + '/update-time', {
+    fetch('{{ url("/appointments") }}/' + event.id + '/update-time', {
         method: 'PATCH',
         headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
         body: JSON.stringify({ start: event.start.toISOString(), end: event.end ? event.end.toISOString() : null })

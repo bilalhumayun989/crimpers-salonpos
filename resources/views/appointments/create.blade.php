@@ -137,7 +137,7 @@ document.getElementById('scanBtn').addEventListener('click', function() {
     custSuggestions.innerHTML = '<div style="padding:10px 12px;color:#64748b;font-size:.83rem;">Scanning...</div>';
     custSuggestions.style.display = 'block';
 
-    fetch('/customers/search?term=' + encodeURIComponent(term))
+    fetch('{{ url("/customers/search") }}?term=' + encodeURIComponent(term))
     .then(r => r.json())
     .then(data => {
         custSuggestions.innerHTML = '';
@@ -183,7 +183,7 @@ custPhoneInput.addEventListener('input', function() {
     if (phone.length < 4) return;
 
     phoneTimeout = setTimeout(() => {
-        fetch('/customers/search?term=' + encodeURIComponent(phone))
+        fetch('{{ url("/customers/search") }}?term=' + encodeURIComponent(phone))
         .then(r => r.json())
         .then(data => {
             // Filter strictly by phone match
