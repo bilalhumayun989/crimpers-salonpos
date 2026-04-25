@@ -263,7 +263,7 @@
 
         @if(auth()->user()->role === 'admin')
         <div class="nav-group">
-            <div class="sidebar-link {{ request()->prefix('promotions')->routeIs('promotions.*') ? 'active' : '' }}">
+            <div class="sidebar-link {{ request()->routeIs('promotions.*') || request()->routeIs('whatsapp.*') ? 'active' : '' }}">
                 <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a5 5 0 0110 0v2a5 5 0 01-10 0zM7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span>
                 <span class="link-text">Promotions</span>
                 <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
