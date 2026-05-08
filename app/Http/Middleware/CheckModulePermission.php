@@ -16,7 +16,7 @@ class CheckModulePermission
     public function handle(Request $request, Closure $next, $module, $action = 'view'): Response
     {
         if (!auth()->check()) {
-            return redirect('login');
+            return redirect()->route('login');
         }
 
         if (!auth()->user()->hasPermission($module, $action)) {

@@ -46,18 +46,11 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ResetPasswordControlle
     ->middleware('guest')->name('password.update');
 
 Route::middleware(['auth'])->group(function () {
+    // Dashboard
+    Route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('permission:dashboard,view');
+
     Route::post('/branch/switch', [BranchController::class, 'switch'])->name('branch.switch');
     Route::put('/branches/{branch}/hours', [BranchController::class, 'updateHours'])->name('branches.update-hours')->middleware('permission:business,view');
-
-    // Two Factor routes (Disabled)
-    // Route::get('/verify', [TwoFactorController::class, 'index'])->name('verify.index');
-    // Route::post('/verify', [TwoFactorController::class, 'verify'])->name('verify.store');
-    // Route::get('/verify/resend', [TwoFactorController::class, 'resend'])->name('verify.resend');
-
-    // Dashboard
-    Route::middleware(['permission:dashboard,view'])->group(function() {
-        Route::get('/', [AdminController::class, 'index'])->name('admin.index');
-    });
 
     // POS & Sales History
     Route::middleware(['permission:pos,access'])->group(function() {
