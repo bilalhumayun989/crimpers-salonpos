@@ -194,6 +194,19 @@
         </div>
       </div>
 
+      {{-- Card group --}}
+      <div class="f-grp" id="card-group" style="display:none;">
+        <span class="f-lbl">Amount Received via Card</span>
+        <div class="f-prewrap">
+          <span class="f-pre">PKR</span>
+          <input type="number" id="pay-card-amount" class="f-input pl" placeholder="0.00" step="0.01">
+        </div>
+        <div class="chg-box" id="card-chg-box">
+          <span class="chg-lbl">Change to Return</span>
+          <span class="chg-val" id="card-chg-val">PKR 0.00</span>
+        </div>
+      </div>
+
       {{-- Split group --}}
       <div class="split-panel" id="split-panel">
         <div style="font-size:.7rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">Split Payment</div>
@@ -206,6 +219,10 @@
           <input type="number" id="split-card" class="split-inp" placeholder="0.00" min="0" step="0.01">
         </div>
         <div class="split-rem" id="split-rem"></div>
+        <div class="chg-box" id="split-chg-box" style="margin-top:7px;">
+          <span class="chg-lbl">Change to Return</span>
+          <span class="chg-val" id="split-chg-val">PKR 0.00</span>
+        </div>
       </div>
 
     </div>
@@ -293,17 +310,36 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
+    if (currentMethod === 'card') {
+      var given = parseFloat(document.getElementById('pay-card-amount').value) || 0;
+      var box   = document.getElementById('card-chg-box');
+      if (given >= r.pay && given > 0) {
+        box.classList.add('show');
+        document.getElementById('card-chg-val').textContent = 'PKR ' + (given - r.pay).toFixed(2);
+      } else {
+        box.classList.remove('show');
+      }
+    }
+
     if (currentMethod === 'split') {
       var cash2 = parseFloat(document.getElementById('split-cash').value) || 0;
       var card2 = parseFloat(document.getElementById('split-card').value) || 0;
       var rem   = r.pay - cash2 - card2;
       var remEl = document.getElementById('split-rem');
+      var sBox  = document.getElementById('split-chg-box');
       if (rem <= 0.001) {
         remEl.textContent = 'Fully covered!';
         remEl.className = 'split-rem ok';
+        if (rem < -0.001) {
+            sBox.classList.add('show');
+            document.getElementById('split-chg-val').textContent = 'PKR ' + Math.abs(rem).toFixed(2);
+        } else {
+            sBox.classList.remove('show');
+        }
       } else {
         remEl.textContent = 'Remaining: PKR ' + rem.toFixed(2);
         remEl.className = 'split-rem warn';
+        sBox.classList.remove('show');
       }
     }
   }
@@ -378,13 +414,18 @@ document.addEventListener('DOMContentLoaded', function () {
       btn.classList.add('active');
       currentMethod = btn.getAttribute('data-method');
       document.getElementById('cash-group').style.display  = (currentMethod === 'cash')  ? 'block' : 'none';
+      document.getElementById('card-group').style.display  = (currentMethod === 'card')  ? 'block' : 'none';
       document.getElementById('split-panel').classList.toggle('show', currentMethod === 'split');
+      
+      if (currentMethod !== 'cash') document.getElementById('chg-box').classList.remove('show');
+      if (currentMethod !== 'card') document.getElementById('card-chg-box').classList.remove('show');
       if (currentMethod !== 'cash') document.getElementById('chg-box').classList.remove('show');
       updateTotals();
     });
   });
 
   document.getElementById('pay-cash').addEventListener('input', updateTotals);
+  document.getElementById('pay-card-amount').addEventListener('input', updateTotals);
   document.getElementById('split-cash').addEventListener('input', updateTotals);
   document.getElementById('split-card').addEventListener('input', updateTotals);
 
@@ -396,6 +437,12 @@ document.addEventListener('DOMContentLoaded', function () {
       var given = parseFloat(document.getElementById('pay-cash').value) || 0;
       if (given < r.pay) {
         alert('Insufficient cash! Please enter the correct amount.'); return;
+      }
+    }
+    if (currentMethod === 'card') {
+      var cardAmt = parseFloat(document.getElementById('pay-card-amount').value) || 0;
+      if (cardAmt < r.pay - 0.01) {
+        alert('Card amount does not cover the full total!'); return;
       }
     }
     if (currentMethod === 'split') {
@@ -422,10 +469,20 @@ document.addEventListener('DOMContentLoaded', function () {
       rating        : (document.querySelector('input[name="pay-rating"]:checked') || {value: 5}).value
     };
     if (session.customer_id) payload.customer_id = session.customer_id;
-    if (currentMethod === 'split') {
+    if (currentMethod === 'cash') {
+      payload.cash_received = parseFloat(document.getElementById('pay-cash').value) || 0;
+      payload.change_returned = payload.cash_received - r.pay;
+    } else if (currentMethod === 'card') {
+      payload.cash_received = parseFloat(document.getElementById('pay-card-amount').value) || 0;
+      payload.change_returned = payload.cash_received - r.pay;
+    } else if (currentMethod === 'split') {
       payload.split_cash = parseFloat(document.getElementById('split-cash').value) || 0;
       payload.split_card = parseFloat(document.getElementById('split-card').value) || 0;
+      payload.cash_received = payload.split_cash + payload.split_card;
+      payload.change_returned = payload.cash_received - r.pay;
     }
+
+    if (payload.change_returned < 0) payload.change_returned = 0;
 
     try {
       var res  = await fetch("{{ route('pos.store') }}", {
@@ -437,7 +494,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (data.success) {
         document.getElementById('modal-inv-no').textContent = 'Invoice #' + data.invoice.invoice_no;
         document.getElementById('invoice-modal').style.display = 'flex';
-        document.getElementById('print-receipt').onclick = function(){ window.open('/invoices/' + data.invoice.id, '_blank'); };
       } else {
         console.error('Payment Error:', data.message);
         btn.disabled = false; btn.textContent = 'Complete Payment';

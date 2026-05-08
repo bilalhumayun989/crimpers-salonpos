@@ -14,7 +14,8 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_no', 'user_id', 'customer_id', 'total_amount', 'tax', 
-        'discount', 'payable_amount', 'payment_method', 'status'
+        'discount', 'payable_amount', 'payment_method', 'status',
+        'cash_received', 'change_returned'
     ];
 
     public function user()

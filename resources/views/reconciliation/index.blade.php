@@ -207,7 +207,7 @@
         <p class="status-title">{{ $matched ? 'Cash Drawer Balanced!' : 'Cash Mismatch Detected' }}</p>
         <p class="status-desc">
             @if($matched)
-                Your cash drawer exactly matches the expected total for today. Day closed successfully.
+                Your cash drawer matches the expected total (or is within the acceptable 1 RS range). Day closed successfully.
             @else
                 There is a difference of <span class="status-diff">PKR {{ number_format(abs($reconciliation->difference ?? 0), 2) }}</span>
                 between the expected cash (PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales - ($totalExpenses ?? 0), 2) }})

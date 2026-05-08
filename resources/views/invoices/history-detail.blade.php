@@ -117,6 +117,13 @@
                         <span style="font-size:14px; font-weight:800;">Payable</span>
                         <span class="h-total-val">PKR {{ number_format($invoice->payable_amount, 2) }}</span>
                     </div>
+
+                    @if($invoice->cash_received !== null)
+                    <div style="margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                        <div class="h-sum-row"><span>Amount Received</span><b>PKR {{ number_format($invoice->cash_received, 2) }}</b></div>
+                        <div class="h-sum-row"><span>Change Returned</span><b>PKR {{ number_format($invoice->change_returned ?? 0, 2) }}</b></div>
+                    </div>
+                    @endif
                 </div>
                 <div style="margin-top:20px; font-size:12px; color:#64748b; text-align:center;">
                     Payment via {{ strtoupper($invoice->payment_method ?? 'cash') }}

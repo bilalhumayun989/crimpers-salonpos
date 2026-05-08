@@ -2,8 +2,8 @@
 @section('title', 'POS Terminal')
 @section('content')
 <style>
-.pos-wrap{display:flex;gap:18px;height:calc(100vh - 110px);margin-top:0;}
-.pos-left{flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden;min-width:0;}
+.pos-wrap{display:flex;gap:18px;min-height:calc(100vh - 115px);margin-top:0;align-items:flex-start;}
+.pos-left{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0;position:sticky;top:66px;height:calc(100vh - 130px);}
 
 /* Search bar */
 .pos-search-bar{background:#fff;border:1px solid #f0e8a0;border-radius:14px;padding:12px 16px;box-shadow:0 1px 4px rgba(247,223,121,.12);display:flex;flex-direction:column;gap:10px;}
@@ -54,9 +54,10 @@
 .cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#cbd5e1;padding:32px 0;opacity:.6;}
 .cart-empty svg{margin-bottom:10px;}
 .cart-empty p{font-size:.8rem;font-weight:600;}
-.cart-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;margin-bottom:8px;background:#fff;border:1px solid #f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,.02);}
+.cart-row{display:flex;align-items:center;gap:12px;padding:16px 15px;border-radius:14px;margin-bottom:10px;background:#fff;border:1px solid #f1f5f9;box-shadow:0 2px 5px rgba(0,0,0,.03);transition:transform .2s;}
+.cart-row:hover{transform:translateX(2px);border-color:#F7DF79;}
 .cart-row-info{flex:1;min-width:0;}
-.cart-row-name{font-size:.82rem;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cart-row-name{font-size:.92rem;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cart-row-type{font-size:.65rem;font-weight:600;color:#94a3b8;text-transform:uppercase;}
 .qty-ctrl{display:flex;align-items:center;border:1.5px solid #f1f5f9;border-radius:10px;overflow:hidden;background:#f8fafc;}
 .qty-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;font-size:1rem;color:#64748b;transition:.2s;}
@@ -73,7 +74,7 @@
 .split-input{padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;font-weight:600;font-family:inherit;color:#1e293b;background:#f8fafc;outline:none;transition:.2s;}
 .split-input:focus{border-color:var(--yd);background:#fff;box-shadow:0 0 0 4px rgba(199,168,0,.1);}
 
-.checkout-btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--y1),var(--yd));color:#18181b;font-size:.95rem;font-weight:800;font-family:inherit;transition:all .25s;box-shadow:0 4px 15px rgba(199,168,0,.25);display:flex;align-items:center;justify-content:center;gap:8px;}
+.checkout-btn{width:100%;padding:16px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#fef9c3,#F7DF79);color:#854d0e;font-size:1rem;font-weight:800;font-family:inherit;transition:all .25s;box-shadow:0 4px 15px rgba(247,223,121,.3);display:flex;align-items:center;justify-content:center;gap:8px;}
 .checkout-btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(199,168,0,.35);}
 .checkout-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
 
@@ -222,7 +223,7 @@
           <button class="cart-clear" id="clear-cart">Clear</button>
         </div>
 
-        <div class="cart-body" id="cart-items" style="flex:1; overflow-y:auto; padding:12px; background:#fafbfb;">
+        <div class="cart-body" id="cart-items" style="height: 210px; max-height: 210px; overflow-y: auto; padding: 12px; background: #fafbfb;">
           <div class="cart-empty" id="empty-cart-msg">
             <svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18m-8 4a2 2 0 11-4 0"/></svg>
             <p style="margin-top:8px;">No items selected yet</p>

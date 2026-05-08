@@ -42,7 +42,7 @@ class ReconciliationController extends Controller
                 'actual_cash' => $request->actual_cash ?? 0,
                 'expected_cash' => $request->expected_cash ?? 0,
                 'difference' => ($request->actual_cash ?? 0) - ($request->expected_cash ?? 0),
-                'status' => (($request->actual_cash ?? 0) == ($request->expected_cash ?? 0)) ? 'matched' : 'discrepancy',
+                'status' => (abs(($request->actual_cash ?? 0) - ($request->expected_cash ?? 0)) <= 1) ? 'matched' : 'discrepancy',
             ]
         );
 

@@ -86,6 +86,8 @@ class POSController extends Controller
                 'discount' => $request->discount ?? 0,
                 'payable_amount' => $request->payable_amount,
                 'payment_method' => $request->payment_method,
+                'cash_received' => $request->cash_received,
+                'change_returned' => $request->change_returned,
                 'status' => 'paid',
             ]);
 
