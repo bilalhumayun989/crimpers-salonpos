@@ -53,7 +53,7 @@ class PurchaseController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_ordered' => 'required|integer|min:1',
+            'items.*.quantity_ordered' => 'required|numeric|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0'
         ]);
 
@@ -127,7 +127,7 @@ class PurchaseController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_ordered' => 'required|integer|min:1',
+            'items.*.quantity_ordered' => 'required|numeric|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0'
         ]);
 
@@ -192,7 +192,7 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'actual_delivery_date' => 'required|date',
             'items' => 'required|array',
-            'items.*.quantity_received' => 'required|integer|min:0'
+            'items.*.quantity_received' => 'required|numeric|min:0'
         ]);
 
         DB::transaction(function () use ($validated, $purchase) {

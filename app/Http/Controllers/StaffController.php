@@ -192,7 +192,7 @@ class StaffController extends Controller
             'shift_type'     => 'required|in:morning,afternoon,evening,full_day',
             'start_time'     => 'required|date_format:H:i',
             'end_time'       => 'required|date_format:H:i',
-            'break_duration' => 'nullable|integer|min:0',
+            'break_duration' => 'nullable|numeric|min:0',
             'notes'          => 'nullable|string|max:255',
         ]);
 
@@ -203,7 +203,7 @@ class StaffController extends Controller
 
     public function rate(Request $request, Staff $staff)
     {
-        $request->validate(['rating' => 'required|integer|min:1|max:5']);
+        $request->validate(['rating' => 'required|numeric|min:1|max:5']);
         $staff->update(['rating' => $request->rating]);
         return redirect()->back()->with('success', 'Rating updated!');
     }
@@ -226,7 +226,7 @@ class StaffController extends Controller
             'start_time'     => 'required|date_format:H:i',
             'end_time'       => 'required|date_format:H:i',
             'shift_type'     => 'required|in:morning,afternoon,evening,full_day',
-            'break_duration' => 'nullable|integer|min:0',
+            'break_duration' => 'nullable|numeric|min:0',
             'notes'          => 'nullable|string',
         ]);
 

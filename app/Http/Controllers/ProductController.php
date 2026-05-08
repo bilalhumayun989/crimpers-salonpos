@@ -71,8 +71,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'selling_price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
-            'current_stock' => 'required|integer|min:0',
-            'min_stock_level' => 'required|integer|min:0',
+            'current_stock' => 'required|numeric|min:0',
+            'min_stock_level' => 'required|numeric|min:0',
             'product_type' => 'required|in:retail,service_supply',
             'sku' => 'nullable|string|unique:products,sku',
             'track_inventory' => 'nullable'
@@ -138,8 +138,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'selling_price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
-            'current_stock' => 'required|integer|min:0',
-            'min_stock_level' => 'required|integer|min:0',
+            'current_stock' => 'required|numeric|min:0',
+            'min_stock_level' => 'required|numeric|min:0',
             'product_type' => 'required|in:retail,service_supply',
             'sku' => 'nullable|string|unique:products,sku,' . $product->id,
             'track_inventory' => 'nullable'
@@ -156,18 +156,20 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        // Protect historical data from Foreign Key crashes
-        $hasHistory = $product->purchaseItems()->exists() || 
-                      $product->productUsages()->exists() || 
-                      \App\Models\InvoiceItem::where('itemizable_id', $product->id)->where('itemizable_type', 'App\Models\Product')->exists();
+        // We allow deletion. Database cascades will handle purchase_items and product_usages.
+        // For invoice_items (morph), we clean them up manually if needed, 
+        // but often we keep them for history. Here we just delete the product.
+        
+        DB::transaction(function() use ($product) {
+            // Clean up invoice items manually since they are polymorphic and don't cascade
+            \App\Models\InvoiceItem::where('itemizable_id', $product->id)
+                ->where('itemizable_type', 'App\Models\Product')
+                ->delete();
 
-        if ($hasHistory) {
-            return redirect()->route('products.index')->with('error', 'Cannot delete this product because it is tied to historical purchases, invoices, or usages. Please set its stock to 0 instead to deactivate it.');
-        }
+            $product->delete();
+        });
 
-        $product->delete();
-
-        return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+        return redirect()->route('products.index')->with('success', 'Product and related history deleted successfully.');
     }
 
     public function showAdjustStock(Product $product)
@@ -179,7 +181,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'adjustment_type' => 'required|in:add,subtract,set',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'required|numeric|min:0',
             'reason' => 'required|string|max:255'
         ]);
 

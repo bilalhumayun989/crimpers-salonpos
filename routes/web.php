@@ -49,10 +49,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/branch/switch', [BranchController::class, 'switch'])->name('branch.switch');
     Route::put('/branches/{branch}/hours', [BranchController::class, 'updateHours'])->name('branches.update-hours')->middleware('permission:business,view');
 
-    // Two Factor routes
-    Route::get('/verify', [TwoFactorController::class, 'index'])->name('verify.index');
-    Route::post('/verify', [TwoFactorController::class, 'verify'])->name('verify.store');
-    Route::get('/verify/resend', [TwoFactorController::class, 'resend'])->name('verify.resend');
+    // Two Factor routes (Disabled)
+    // Route::get('/verify', [TwoFactorController::class, 'index'])->name('verify.index');
+    // Route::post('/verify', [TwoFactorController::class, 'verify'])->name('verify.store');
+    // Route::get('/verify/resend', [TwoFactorController::class, 'resend'])->name('verify.resend');
 
     // Dashboard
     Route::middleware(['permission:dashboard,view'])->group(function() {

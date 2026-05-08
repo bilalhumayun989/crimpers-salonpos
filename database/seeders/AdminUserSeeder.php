@@ -17,6 +17,8 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Admin User',
                 'password' => \Hash::make('12345678'),
+                'role' => 'admin',
+                'branch_id' => 1,
             ]
         );
     }

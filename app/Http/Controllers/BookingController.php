@@ -24,9 +24,9 @@ class BookingController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
             'items' => 'required|array|min:1',
-            'items.*.id' => 'required|integer',
+            'items.*.id' => 'required|numeric',
             'items.*.type' => 'required|in:service,product',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:1',
             'payment_method' => 'required|in:cash,card,qr',
         ]);
 
