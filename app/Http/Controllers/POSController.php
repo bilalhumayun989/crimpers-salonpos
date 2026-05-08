@@ -56,25 +56,26 @@ class POSController extends Controller
             
             // Auto-lookup/create customer based on phone (Unique identifier)
             if (!$customerId && $request->customer_phone) {
-                // Sanitize phone for strict matching (remove spaces/dashes)
-                $cleanPhone = preg_replace('/[^0-9]/', '', $request->customer_phone);
-                
-                // We check if THIS EXACT PHONE exists (using both raw and cleaned search)
-                $customer = Customer::where('phone', $request->customer_phone)
-                                    ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"), $cleanPhone)
-                                    ->first();
-                
+                // ⚠️ phone is ENCRYPTED — cannot use SQL WHERE/LIKE.
+                // Load all customers and compare after decryption.
+                $inputPhoneClean = preg_replace('/[^0-9]/', '', $request->customer_phone);
+
+                $customer = Customer::all()->first(function ($cust) use ($inputPhoneClean) {
+                    $custPhoneClean = preg_replace('/[^0-9]/', '', (string)($cust->phone ?? ''));
+                    return $custPhoneClean && str_contains($custPhoneClean, $inputPhoneClean);
+                });
+
                 if ($customer) {
                     $customerId = $customer->id;
-                    // Optional: sync name if it's not a generic walk-in
+                    // Sync name if it's not a generic walk-in
                     if ($request->customer_name && $request->customer_name !== 'Walk-in Customer') {
                         $customer->update(['name' => $request->customer_name]);
                     }
-                } else if ($request->customer_name && $request->customer_name !== 'Walk-in Customer') {
-                    // NO customer found -> CREATE NEW
+                } elseif ($request->customer_name && $request->customer_name !== 'Walk-in Customer') {
+                    // No customer found with this phone → CREATE NEW
                     $newCustomer = Customer::create([
-                        'name' => $request->customer_name,
-                        'phone' => $request->customer_phone,
+                        'name'            => $request->customer_name,
+                        'phone'           => $request->customer_phone,
                         'membership_type' => 'Standard'
                     ]);
                     $customerId = $newCustomer->id;
@@ -222,70 +223,66 @@ class POSController extends Controller
 
     public function searchCustomer(Request $request)
     {
-        $q = $request->input('q');
-        $name = $request->input('name');
-        $phone = $request->input('phone');
-        
+        $q     = trim($request->input('q', ''));
+        $name  = trim($request->input('name', ''));
+        $phone = trim($request->input('phone', ''));
+
         if (empty($q) && empty($name) && empty($phone)) {
             return response()->json(['success' => false, 'message' => 'Query is empty']);
         }
 
-        $query = Customer::query();
-        $cleanPhone = $phone ? preg_replace('/[^0-9]/', '', $phone) : null;
+        // ⚠️  CRITICAL: phone & name are ENCRYPTED in the DB.
+        // SQL LIKE queries search against ciphertext and NEVER match.
+        // We MUST load all customers and filter after Laravel decrypts them.
+        $cleanInputPhone = preg_replace('/[^0-9]/', '', $phone ?: $q);
+        $nameQuery       = strtolower($name ?: $q);
 
-        $query->where(function($sub) use ($phone, $cleanPhone, $name, $q) {
-            // Match by Phone (Partial match is safer for varied formatting)
-            if ($cleanPhone) {
-                $sub->where('phone', 'LIKE', "%{$cleanPhone}%")
-                    ->orWhere('phone', 'LIKE', "%{$phone}%");
-            }
-            
-            // OR Match by Name (Partial)
-            if ($name && $name !== 'Walk-in Customer') {
-                $sub->orWhere('name', 'LIKE', "%{$name}%");
+        $customer = Customer::all()->first(function ($cust) use ($cleanInputPhone, $nameQuery) {
+            $decryptedPhone = strtolower((string)($cust->phone ?? ''));
+            $decryptedName  = strtolower((string)($cust->name  ?? ''));
+            $cleanCustPhone = preg_replace('/[^0-9]/', '', $decryptedPhone);
+
+            // Match by phone digits
+            if ($cleanInputPhone && $cleanCustPhone &&
+                str_contains($cleanCustPhone, $cleanInputPhone)) {
+                return true;
             }
 
-            // OR Match by General Query
-            if ($q && $q !== $phone && $q !== $name) {
-                $sub->orWhere('name', 'LIKE', "%{$q}%")
-                    ->orWhere('phone', 'LIKE', "%{$q}%");
+            // Match by name (partial, case-insensitive)
+            if ($nameQuery && $nameQuery !== 'walk-in customer' &&
+                str_contains($decryptedName, $nameQuery)) {
+                return true;
             }
+
+            return false;
         });
-
-        // Order by best match (exact phone match first)
-        if ($phone) {
-            $query->orderByRaw("CASE WHEN phone = ? THEN 0 ELSE 1 END", [$phone]);
-        }
-
-        $customer = $query->first();
 
         if (!$customer) {
             return response()->json(['success' => false, 'message' => 'Customer not found']);
         }
 
-        $hasMembership = $customer->membership_status === 'Active';
-        // Assume VIP/membership gives 10% discount for demo purposes, unless otherwise specified in your logic
+        $hasMembership   = $customer->membership_status === 'Active';
         $discountPercent = 0;
         if ($hasMembership) {
             $discountPercent = stripos($customer->membership_type, 'VIP') !== false ? 15 : 10;
         }
 
-        $totalSpent = $customer->invoices()->sum('payable_amount');
+        $totalSpent  = $customer->invoices()->sum('payable_amount');
         $lastInvoice = $customer->invoices()->latest()->first();
-        $lastVisit = $lastInvoice ? $lastInvoice->created_at->format('d M, Y') : null;
+        $lastVisit   = $lastInvoice ? $lastInvoice->created_at->format('d M, Y') : null;
 
         return response()->json([
-            'success' => true,
+            'success'  => true,
             'customer' => [
-                'id' => $customer->id,
-                'name' => $customer->name,
-                'phone' => $customer->phone,
-                'membership_type' => $customer->membership_type,
-                'membership_status' => $customer->membership_status,
+                'id'               => $customer->id,
+                'name'             => $customer->name,
+                'phone'            => $customer->phone,
+                'membership_type'  => $customer->membership_type,
+                'membership_status'=> $customer->membership_status,
                 'discount_percent' => $discountPercent,
-                'total_spent' => $totalSpent,
-                'last_visit' => $lastVisit
-            ]
+                'total_spent'      => $totalSpent,
+                'last_visit'       => $lastVisit,
+            ],
         ]);
     }
 }
