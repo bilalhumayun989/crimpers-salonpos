@@ -336,9 +336,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const name = custNameInput.value.trim();
       const phone = custPhoneInput.value.trim();
       
-      if(!name && !phone) return;
-
-      const query = phone || name;
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      const query = cleanPhone || name;
 
       fetch(`{{ route('pos.search-customer') }}?q=${encodeURIComponent(query)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`)
           .then(res => res.json())

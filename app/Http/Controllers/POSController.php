@@ -56,8 +56,13 @@ class POSController extends Controller
             
             // Auto-lookup/create customer based on phone (Unique identifier)
             if (!$customerId && $request->customer_phone) {
-                // We check if THIS EXACT PHONE exists
-                $customer = Customer::where('phone', $request->customer_phone)->first();
+                // Sanitize phone for strict matching (remove spaces/dashes)
+                $cleanPhone = preg_replace('/[^0-9]/', '', $request->customer_phone);
+                
+                // We check if THIS EXACT PHONE exists (using both raw and cleaned search)
+                $customer = Customer::where('phone', $request->customer_phone)
+                                    ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"), $cleanPhone)
+                                    ->first();
                 
                 if ($customer) {
                     $customerId = $customer->id;
@@ -66,8 +71,7 @@ class POSController extends Controller
                         $customer->update(['name' => $request->customer_name]);
                     }
                 } else if ($request->customer_name && $request->customer_name !== 'Walk-in Customer') {
-                    // NO customer found with this phone number -> CREATE NEW
-                    // Even if another 'Ali' exists with a different number, this creates a new record
+                    // NO customer found -> CREATE NEW
                     $newCustomer = Customer::create([
                         'name' => $request->customer_name,
                         'phone' => $request->customer_phone,
@@ -228,16 +232,20 @@ class POSController extends Controller
 
         $query = Customer::query();
 
+        // 1. Prioritize Phone Search (Primary Key in business logic)
         if ($phone) {
-            $query->where('phone', $phone);
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            $query->where(function($sub) use ($phone, $cleanPhone) {
+                $sub->where('phone', $phone)
+                    ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"), $cleanPhone);
+            });
+        } 
+        // 2. If no phone, or as a secondary filter, search by Name
+        elseif ($name && $name !== 'Walk-in Customer') {
+            $query->where('name', 'LIKE', "%{$name}%");
         }
-        
-        if ($name && $name !== 'Walk-in Customer') {
-            $query->where('name', $name);
-        }
-
-        // If no strict match and fallback 'q' exists
-        if (!$phone && !$name && $q) {
+        // 3. General query fallback
+        elseif ($q) {
             $query->where(function($sub) use ($q) {
                 $sub->where('phone', 'LIKE', "%{$q}%")
                     ->orWhere('name', 'LIKE', "%{$q}%");
