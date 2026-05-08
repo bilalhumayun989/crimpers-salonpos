@@ -32,10 +32,10 @@ class LoginController extends Controller
             // for ALL branches (Lahore & Faisalabad) before any permission checks run.
             session(['current_branch_id' => $user->branch_id ?? 1]);
 
-            // Only Admins (and the main owner email) get 2FA (Temporarily Commented Out)
-            // if ($user->role === 'admin' || $user->email === 'safullahzafar@gmail.com') {
-            //     return redirect()->route('verify.index');
-            // }
+            // Only Admins (and the main owner email) get 2FA
+            if ($user->role === 'admin' || $user->email === 'safullahzafar@gmail.com') {
+                return redirect()->route('verify.index');
+            }
 
             // Everyone else (Staff/Generic Roles) goes to their allowed dashboard
             if ($user->hasPermission('pos', 'access')) {
