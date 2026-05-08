@@ -75,6 +75,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/invoices/{invoice}/whatsapp-share', [WhatsAppController::class, 'shareInvoice'])->name('invoice.whatsapp.share');
         Route::get('/reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
         Route::post('/reconciliation', [ReconciliationController::class, 'store'])->name('reconciliation.store');
+        
+        // Expenses
+        Route::get('/expenses/create', [App\Http\Controllers\ExpenseController::class, 'create'])->name('expenses.create');
+        Route::post('/expenses', [App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
     });
 
     // CRM

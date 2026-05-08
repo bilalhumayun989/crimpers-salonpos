@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Purchase;
 use App\Models\CashReconciliation;
 use App\Models\Supplier;
+use App\Models\Expense;
 use Carbon\Carbon;
 
 class InvoiceController extends Controller
@@ -21,9 +22,10 @@ class InvoiceController extends Controller
         $canViewSales = $user->hasPermission('sales', 'view');
         $canViewPurchases = $user->hasPermission('purchases', 'view');
         $canViewReconciliation = $user->hasPermission('reconciliation', 'view');
+        $canViewExpenses = $user->hasPermission('sales', 'view'); // Same as sales
 
         // Total fallback: If they have NO history permissions, block them
-        if (!$canViewSales && !$canViewPurchases && !$canViewReconciliation) {
+        if (!$canViewSales && !$canViewPurchases && !$canViewReconciliation && !$canViewExpenses) {
             abort(403, 'Access Denied: You do not have permission to view any history records.');
         }
 
@@ -35,17 +37,21 @@ class InvoiceController extends Controller
             if ($canViewSales) $tab = 'sales';
             elseif ($canViewPurchases) $tab = 'purchases';
             elseif ($canViewReconciliation) $tab = 'reconciliation';
+            elseif ($canViewExpenses) $tab = 'expenses';
         }
 
-        // Security check: If they request a tab they aren't allowed to see, redirect to one they are
+        // Security check
         if ($tab === 'sales' && !$canViewSales) return redirect()->route('invoices.index');
         if ($tab === 'purchases' && !$canViewPurchases) return redirect()->route('invoices.index');
         if ($tab === 'reconciliation' && !$canViewReconciliation) return redirect()->route('invoices.index');
+        if ($tab === 'expenses' && !$canViewExpenses) return redirect()->route('invoices.index');
 
         if ($tab === 'purchases') {
             return $this->purchaseHistory($request);
         } elseif ($tab === 'reconciliation') {
             return $this->reconciliationHistory($request);
+        } elseif ($tab === 'expenses') {
+            return $this->expenseHistory($request);
         }
 
         $query = Invoice::with(['customer', 'user', 'items.itemizable']);
@@ -374,5 +380,19 @@ class InvoiceController extends Controller
         $reconciliations = $query->latest('date')->paginate(20)->withQueryString();
 
         return view('invoices.index', compact('reconciliations'));
+    }
+
+    public function expenseHistory(Request $request)
+    {
+        $query = Expense::with('user');
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereDate('created_at', '>=', $request->date_from)
+                  ->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $expenses = $query->latest('created_at')->paginate(20)->withQueryString();
+
+        return view('invoices.index', compact('expenses'));
     }
 }

@@ -113,7 +113,7 @@
         </div>
         <div>
             <div class="stat-label">Expected in Drawer</div>
-            <div class="stat-val green">PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales, 2) }}</div>
+            <div class="stat-val green">PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales - ($totalExpenses ?? 0), 2) }}</div>
         </div>
     </div>
 </div>
@@ -138,9 +138,13 @@
                 <div class="fig-label"><span class="fig-dot fig-dot-blue"></span>Today's Sales</div>
                 <div class="fig-val">PKR {{ number_format($totalSales, 2) }}</div>
             </div>
+            <div class="fig-row">
+                <div class="fig-label"><span class="fig-dot" style="background:#ef4444;"></span>Drawer Expenses</div>
+                <div class="fig-val" style="color:#ef4444;">- PKR {{ number_format($totalExpenses ?? 0, 2) }}</div>
+            </div>
             <div class="fig-total">
                 <div class="fig-total-label">Total Expected Cash</div>
-                <div class="fig-total-val">PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales, 2) }}</div>
+                <div class="fig-total-val">PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales - ($totalExpenses ?? 0), 2) }}</div>
             </div>
         </div>
     </div>
@@ -156,7 +160,7 @@
         <div class="panel-body">
             <form action="{{ route('reconciliation.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="expected_cash" value="{{ ($reconciliation->opening_balance ?? 0) + $totalSales }}">
+                <input type="hidden" name="expected_cash" value="{{ ($reconciliation->opening_balance ?? 0) + $totalSales - ($totalExpenses ?? 0) }}">
 
                 <div class="form-field">
                     <label class="form-label">Opening Balance <span>(PKR)</span></label>
@@ -206,7 +210,7 @@
                 Your cash drawer exactly matches the expected total for today. Day closed successfully.
             @else
                 There is a difference of <span class="status-diff">PKR {{ number_format(abs($reconciliation->difference ?? 0), 2) }}</span>
-                between the expected cash (PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales, 2) }})
+                between the expected cash (PKR {{ number_format(($reconciliation->opening_balance ?? 0) + $totalSales - ($totalExpenses ?? 0), 2) }})
                 and the actual cash counted (PKR {{ number_format($reconciliation->actual_cash, 2) }}).
                 Please recount and verify.
             @endif

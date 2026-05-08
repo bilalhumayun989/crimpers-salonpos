@@ -188,7 +188,7 @@ input:checked + .slider:before{transform:translateX(18px);}
                 <div class="perm-group">
                     <div class="perm-group-title">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                        Point of Sale & History
+                        Point of Sale
                     </div>
 
                     {{-- POS sub-label --}}
@@ -206,6 +206,21 @@ input:checked + .slider:before{transform:translateX(18px);}
                         <span class="perm-label">Cash Reconciliation</span>
                         <label class="perm-toggle">
                             <input type="checkbox" name="permissions[reconciliation][access]" value="1" {{ $isSet('reconciliation','access') ? 'checked' : '' }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- Expenses --}}
+                <div class="perm-group">
+                    <div class="perm-group-title">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                        Expenses
+                    </div>
+                    <div class="perm-item">
+                        <span class="perm-label">Record Expenses</span>
+                        <label class="perm-toggle">
+                            <input type="checkbox" name="permissions[expenses][create]" value="1" {{ $isSet('expenses','create') ? 'checked' : '' }}>
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -245,6 +260,13 @@ input:checked + .slider:before{transform:translateX(18px);}
                             <span class="perm-label" style="font-size:0.75rem;">View Reconciliation History</span>
                             <label class="perm-toggle">
                                 <input type="checkbox" name="permissions[reconciliation][view]" value="1" {{ $isSet('reconciliation','view') ? 'checked' : '' }}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="perm-item">
+                            <span class="perm-label" style="font-size:0.75rem;">View Expense History</span>
+                            <label class="perm-toggle">
+                                <input type="checkbox" name="permissions[expenses][view]" value="1" {{ $isSet('expenses','view') ? 'checked' : '' }}>
                                 <span class="slider"></span>
                             </label>
                         </div>

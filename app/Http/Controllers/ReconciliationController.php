@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CashReconciliation;
 use App\Models\Invoice;
+use App\Models\Expense;
 use Carbon\Carbon;
 
 class ReconciliationController extends Controller
@@ -19,7 +20,11 @@ class ReconciliationController extends Controller
             ->where('payment_method', 'cash')
             ->sum('payable_amount');
 
-        return view('reconciliation.index', compact('reconciliation', 'totalSales'));
+        $totalExpenses = Expense::whereDate('created_at', $today)
+            ->where('deducted_from_drawer', true)
+            ->sum('amount');
+
+        return view('reconciliation.index', compact('reconciliation', 'totalSales', 'totalExpenses'));
     }
 
     public function store(Request $request)

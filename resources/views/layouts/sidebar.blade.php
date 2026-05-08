@@ -254,13 +254,23 @@
                 @if(auth()->user()->hasPermission('appointments', 'view'))
                 <a href="{{ route('appointments.index') }}" class="sub-link {{ request()->routeIs('appointments.*') ? 'active-sub' : '' }}">Appointments</a>
                 @endif
-                @if(auth()->user()->hasPermission('reconciliation', 'access') || auth()->user()->hasPermission('pos', 'access'))
-                <a href="/reconciliation" class="sub-link {{ request()->is('reconciliation') ? 'active-sub' : '' }}">Cash Reconciliation</a>
-                @endif
+
             </div>
         </div>
         @endif
-
+        @if(auth()->user()->hasPermission('sales', 'view'))
+        <div class="nav-group">
+            <div class="sidebar-link {{ request()->routeIs('reconciliation.*', 'expenses.*') ? 'active' : '' }}">
+                <span class="sidebar-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+                <span class="link-text">Expenses & Cash</span>
+                <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="sub-menu">
+                <a href="{{ route('expenses.create') }}" class="sub-link {{ request()->routeIs('expenses.*') ? 'active-sub' : '' }}">Add Expense</a>
+                <a href="{{ route('reconciliation.index') }}" class="sub-link {{ request()->routeIs('reconciliation.*') ? 'active-sub' : '' }}">Cash Reconciliation</a>
+            </div>
+        </div>
+        @endif
 
 
 

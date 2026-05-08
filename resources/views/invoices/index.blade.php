@@ -106,6 +106,13 @@
         Reconciliation History
     </a>
     @endif
+
+    @if(auth()->user()->hasPermission('sales', 'view'))
+    <a href="{{ route('invoices.index', ['tab' => 'expenses']) }}" class="tab-btn {{ $tab === 'expenses' ? 'active' : '' }}">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Expense History
+    </a>
+    @endif
 </div>
 
 {{-- Header --}}
@@ -484,6 +491,60 @@
         </table>
         @if($reconciliations->hasPages()) <div class="pagination-wrap">{{ $reconciliations->links() }}</div> @endif
     </div>
-@endif
+@elseif($tab === 'expenses')
+    <div class="filter-panel">
+        <div class="filter-title"><span>Filters</span></div>
+        <form method="GET" action="{{ route('invoices.index') }}">
+            <input type="hidden" name="tab" value="expenses">
+            <div class="filter-grid">
+                <div>
+                    <label class="f-label">Date From</label>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-input">
+                </div>
+                <div>
+                    <label class="f-label">Date To</label>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-input">
+                </div>
+            </div>
+            <div class="filter-footer">
+                <a href="{{ route('invoices.index', ['tab' => 'expenses']) }}" class="btn-clear">Reset</a>
+                <button type="submit" class="btn-apply">Apply Filters</button>
+            </div>
+        </form>
+    </div>
 
+    <div class="table-wrap">
+        <table class="inv-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Recorded By</th>
+                    <th>Description</th>
+                    <th>Deducted From Drawer</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($expenses as $exp)
+                <tr>
+                    <td style="font-weight:700; color:#1e293b;">{{ $exp->created_at->format('M d, Y h:i A') }}</td>
+                    <td>{{ $exp->user->name ?? 'System' }}</td>
+                    <td>{{ $exp->description }}</td>
+                    <td>
+                        @if($exp->deducted_from_drawer)
+                            <span class="pill pill-amber">Yes</span>
+                        @else
+                            <span class="pill pill-gray">No</span>
+                        @endif
+                    </td>
+                    <td style="font-weight:800; color:#ef4444;">PKR {{ number_format($exp->amount, 2) }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="empty-state">No expense records found.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        @if($expenses->hasPages()) <div class="pagination-wrap">{{ $expenses->links() }}</div> @endif
+    </div>
+@endif
 @endsection
