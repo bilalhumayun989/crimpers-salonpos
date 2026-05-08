@@ -231,25 +231,30 @@ class POSController extends Controller
         }
 
         $query = Customer::query();
+        $cleanPhone = $phone ? preg_replace('/[^0-9]/', '', $phone) : null;
 
-        // 1. Prioritize Phone Search (Primary Key in business logic)
-        if ($phone) {
-            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-            $query->where(function($sub) use ($phone, $cleanPhone) {
+        $query->where(function($sub) use ($phone, $cleanPhone, $name, $q) {
+            // Match by Phone (Strict or Cleaned)
+            if ($phone) {
                 $sub->where('phone', $phone)
                     ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"), $cleanPhone);
-            });
-        } 
-        // 2. If no phone, or as a secondary filter, search by Name
-        elseif ($name && $name !== 'Walk-in Customer') {
-            $query->where('name', 'LIKE', "%{$name}%");
-        }
-        // 3. General query fallback
-        elseif ($q) {
-            $query->where(function($sub) use ($q) {
-                $sub->where('phone', 'LIKE', "%{$q}%")
-                    ->orWhere('name', 'LIKE', "%{$q}%");
-            });
+            }
+            
+            // OR Match by Name (Partial)
+            if ($name && $name !== 'Walk-in Customer') {
+                $sub->orWhere('name', 'LIKE', "%{$name}%");
+            }
+
+            // OR Match by General Query
+            if ($q && $q !== $phone && $q !== $name) {
+                $sub->orWhere('name', 'LIKE', "%{$q}%")
+                    ->orWhere('phone', 'LIKE', "%{$q}%");
+            }
+        });
+
+        // Order by best match (exact phone match first)
+        if ($phone) {
+            $query->orderByRaw("CASE WHEN phone = ? THEN 0 ELSE 1 END", [$phone]);
         }
 
         $customer = $query->first();

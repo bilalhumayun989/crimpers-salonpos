@@ -339,7 +339,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       const query = cleanPhone || name;
 
-      fetch(`{{ route('pos.search-customer') }}?q=${encodeURIComponent(query)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`)
+      // Use relative URL to avoid APP_URL issues on VPS
+      fetch(`pos/search-customer?q=${encodeURIComponent(query)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`)
           .then(res => res.json())
           .then(data => {
               if(data.success) {
