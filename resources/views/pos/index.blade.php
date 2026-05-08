@@ -339,8 +339,12 @@ document.addEventListener('DOMContentLoaded', function () {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       const query = cleanPhone || name;
 
-      // Use relative URL to avoid APP_URL issues on VPS
-      fetch(`pos/search-customer?q=${encodeURIComponent(query)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`)
+      // Robust URL detection for VPS/Subdirectory
+      let searchUrl = window.location.pathname;
+      if (!searchUrl.endsWith('/')) searchUrl += '/';
+      searchUrl += 'search-customer';
+
+      fetch(`${searchUrl}?q=${encodeURIComponent(query)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}`)
           .then(res => res.json())
           .then(data => {
               if(data.success) {

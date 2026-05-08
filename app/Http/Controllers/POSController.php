@@ -234,10 +234,10 @@ class POSController extends Controller
         $cleanPhone = $phone ? preg_replace('/[^0-9]/', '', $phone) : null;
 
         $query->where(function($sub) use ($phone, $cleanPhone, $name, $q) {
-            // Match by Phone (Strict or Cleaned)
-            if ($phone) {
-                $sub->where('phone', $phone)
-                    ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"), $cleanPhone);
+            // Match by Phone (Partial match is safer for varied formatting)
+            if ($cleanPhone) {
+                $sub->where('phone', 'LIKE', "%{$cleanPhone}%")
+                    ->orWhere('phone', 'LIKE', "%{$phone}%");
             }
             
             // OR Match by Name (Partial)
