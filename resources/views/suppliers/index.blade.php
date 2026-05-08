@@ -162,7 +162,7 @@ document.getElementById('btn-confirm-del').addEventListener('click', async funct
     if (!deleteId) return;
     const btn = this;
     btn.disabled = true; btn.textContent = 'Deleting...';
-    const res = await fetch(`/suppliers/${deleteId}`, {
+    const res = await fetch(`{{ url('suppliers') }}/${deleteId}`, {
         method: 'DELETE',
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
     });

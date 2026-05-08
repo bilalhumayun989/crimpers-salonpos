@@ -107,7 +107,7 @@
         </div>
         
         @if(auth()->user()->hasPermission('reconciliation', 'access') || auth()->user()->hasPermission('pos', 'access'))
-        <button class="search-clear" id="reconciliation-btn" title="Cash Reconciliation" onclick="window.location.href='/reconciliation'" style="border-color:#f0e8a0; color:#c9a800;">
+        <button class="search-clear" id="reconciliation-btn" title="Cash Reconciliation" onclick="window.location.href='{{ url('reconciliation') }}'" style="border-color:#f0e8a0; color:#c9a800;">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </button>
         @endif

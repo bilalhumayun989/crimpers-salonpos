@@ -298,7 +298,7 @@ document.getElementById('confirm_del_btn').addEventListener('click', async funct
     btn.disabled = true;
     btn.textContent = 'Deleting...';
 
-    const response = await fetch(`/categories/${categoryToDelete}`, {
+    const response = await fetch(`{{ url('categories') }}/${categoryToDelete}`, {
         method: 'DELETE',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',

@@ -730,7 +730,7 @@ function dismissGlobalAlert() {
 function updateGlobalStatus(status) {
     if (!activeAlertAppointmentId) return;
     
-    fetch(`/appointments/${activeAlertAppointmentId}/update-status`, {
+    fetch(`{{ url('appointments') }}/${activeAlertAppointmentId}/update-status`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -744,7 +744,7 @@ function updateGlobalStatus(status) {
             
             // Redirect to edit page for Arrived or Late, otherwise just refresh
             if (status === 'arrived' || status === 'late') {
-                window.location.href = `/appointments/${activeAlertAppointmentId}/edit`;
+                window.location.href = `{{ url('appointments') }}/${activeAlertAppointmentId}/edit`;
             } else {
                 if (window.location.pathname.includes('/appointments') || window.location.pathname === '/' || window.location.pathname.includes('/admin')) {
                     window.location.reload();
