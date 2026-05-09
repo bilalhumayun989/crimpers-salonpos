@@ -16,7 +16,7 @@ class CategoryController extends Controller
         ]);
 
         $slug = Str::slug($validated['name']);
-        
+
         // Check if slug already exists to avoid DB unique constraint error
         $existing = Category::where('slug', $slug)->where('type', $validated['type'])->first();
         if ($existing) {
