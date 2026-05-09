@@ -293,7 +293,7 @@
                         <div class="appt-avatar">{{ strtoupper(substr($appt->customer_name, 0, 1)) }}</div>
                         <div style="flex:1;min-width:0;">
                             <div class="appt-name">{{ $appt->customer_name }}</div>
-                            <div class="appt-meta">{{ $appt->service->name }} · {{ $appt->staff->name }} · {{ $appt->appointment_date->format('M j') }}</div>
+                            <div class="appt-meta">{{ $appt->service->name ?? 'Unknown Service' }} · {{ $appt->staff->name ?? 'Unassigned' }} · {{ $appt->appointment_date->format('M j') }}</div>
                         </div>
                         <span class="badge {{ $appt->status == 'completed' ? 'badge-done' : 'badge-info' }}">{{ $appt->status }}</span>
                     </div>

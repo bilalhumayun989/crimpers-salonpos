@@ -103,7 +103,7 @@
                     </div>
                 </td>
                 <td style="font-weight:500;color:#1e293b;">{{ $appt->service->name }}</td>
-                <td style="color:#64748b;">{{ $appt->staff->name }}</td>
+                <td style="color:#64748b;">{{ $appt->staff->name ?? 'Unassigned' }}</td>
                 <td>
                     <div class="datetime-main">{{ $appt->appointment_date->format('M j, Y') }}</div>
                     <div class="datetime-time">{{ $appt->start_time->format('g:i A') }} — {{ $appt->end_time->format('g:i A') }}</div>
