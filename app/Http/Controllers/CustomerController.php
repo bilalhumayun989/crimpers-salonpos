@@ -103,11 +103,36 @@ class CustomerController extends Controller
 
     public function search(Request $request)
     {
-        $term = $request->query('term');
-        $customers = Customer::where('name', 'LIKE', "%{$term}%")
-            ->orWhere('phone', 'LIKE', "%{$term}%")
-            ->limit(10)
-            ->get(['name', 'phone']);
+        $term = trim(strtolower($request->query('term', '')));
+        
+        if (empty($term)) {
+            return response()->json([]);
+        }
+
+        // ⚠️ name and phone are ENCRYPTED in the DB.
+        // We must load customers and filter after decryption.
+        $cleanTerm = preg_replace('/[^0-9]/', '', $term);
+
+        $customers = Customer::all()->filter(function ($cust) use ($term, $cleanTerm) {
+            $decryptedName  = strtolower((string)($cust->name ?? ''));
+            $decryptedPhone = strtolower((string)($cust->phone ?? ''));
+            $cleanCustPhone = preg_replace('/[^0-9]/', '', $decryptedPhone);
+
+            if ($cleanTerm && $cleanCustPhone && str_contains($cleanCustPhone, $cleanTerm)) {
+                return true;
+            }
+
+            if ($term && str_contains($decryptedName, $term)) {
+                return true;
+            }
+
+            return false;
+        })->take(10)->map(function ($cust) {
+            return [
+                'name' => $cust->name,
+                'phone' => $cust->phone
+            ];
+        })->values();
 
         return response()->json($customers);
     }

@@ -83,9 +83,16 @@ class AppointmentController extends Controller
             return back()->withErrors(['conflict' => 'This time slot is already booked.']);
         }
 
-        $customer = \App\Models\Customer::where('name', $request->customer_name)
-            ->where('phone', $request->customer_phone)
-            ->first();
+        // ⚠️ name and phone are ENCRYPTED in the DB.
+        // We must load customers and filter after decryption.
+        $inputName  = strtolower(trim($request->customer_name));
+        $inputPhone = preg_replace('/[^0-9]/', '', $request->customer_phone ?? '');
+
+        $customer = \App\Models\Customer::all()->first(function ($cust) use ($inputName, $inputPhone) {
+            $custName  = strtolower(trim((string)($cust->name ?? '')));
+            $custPhone = preg_replace('/[^0-9]/', '', (string)($cust->phone ?? ''));
+            return $custName === $inputName && $custPhone === $inputPhone;
+        });
 
         if (!$customer) {
             $customer = \App\Models\Customer::create([
@@ -161,9 +168,15 @@ class AppointmentController extends Controller
             return back()->withErrors(['conflict' => 'This time slot is already booked.']);
         }
 
-        $customer = \App\Models\Customer::where('name', $request->customer_name)
-            ->where('phone', $request->customer_phone)
-            ->first();
+        // ⚠️ name and phone are ENCRYPTED in the DB.
+        $inputName  = strtolower(trim($request->customer_name));
+        $inputPhone = preg_replace('/[^0-9]/', '', $request->customer_phone ?? '');
+
+        $customer = \App\Models\Customer::all()->first(function ($cust) use ($inputName, $inputPhone) {
+            $custName  = strtolower(trim((string)($cust->name ?? '')));
+            $custPhone = preg_replace('/[^0-9]/', '', (string)($cust->phone ?? ''));
+            return $custName === $inputName && $custPhone === $inputPhone;
+        });
 
         if (!$customer) {
             $customer = \App\Models\Customer::create([
