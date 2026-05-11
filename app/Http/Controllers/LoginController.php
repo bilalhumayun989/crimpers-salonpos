@@ -45,10 +45,16 @@ class LoginController extends Controller
                 return redirect()->route('invoices.index')->with('success', 'Logged in successfully.');
             } elseif ($user->hasPermission('inventory', 'view')) {
                 return redirect()->route('products.index')->with('success', 'Logged in successfully.');
+            } elseif ($user->hasPermission('purchases', 'view')) {
+                return redirect()->route('purchases.index')->with('success', 'Logged in successfully.');
+            } elseif ($user->hasPermission('history', 'access')) {
+                return redirect()->route('invoices.index')->with('success', 'Logged in successfully.');
             } elseif ($user->hasPermission('customers', 'view')) {
                 return redirect()->route('customers.index')->with('success', 'Logged in successfully.');
             } elseif ($user->hasPermission('suppliers', 'view')) {
                 return redirect()->route('suppliers.index')->with('success', 'Logged in successfully.');
+            } elseif ($user->hasPermission('expenses', 'view')) {
+                return redirect()->route('reconciliation.index')->with('success', 'Logged in successfully.');
             } elseif ($user->hasPermission('reports', 'view')) {
                 return redirect()->route('reports.index')->with('success', 'Logged in successfully.');
             } elseif ($user->hasPermission('staff', 'view')) {

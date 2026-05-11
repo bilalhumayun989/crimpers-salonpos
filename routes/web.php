@@ -46,8 +46,27 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ResetPasswordControlle
     ->middleware('guest')->name('password.update');
 
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
-    Route::get('/', [AdminController::class, 'index'])->name('admin.index')->middleware('permission:dashboard,view');
+    // Dashboard / Landing
+    Route::get('/', function() {
+        $user = auth()->user();
+        if ($user->hasPermission('dashboard', 'view')) {
+            return app(\App\Http\Controllers\AdminController::class)->index();
+        }
+        
+        // Dynamic redirection for users without dashboard access
+        if ($user->hasPermission('pos', 'access')) return redirect()->route('pos.index');
+        if ($user->hasPermission('appointments', 'view')) return redirect()->route('appointments.index');
+        if ($user->hasPermission('sales', 'view')) return redirect()->route('invoices.index');
+        if ($user->hasPermission('purchases', 'view')) return redirect()->route('purchases.index');
+        if ($user->hasPermission('inventory', 'view')) return redirect()->route('products.index');
+        if ($user->hasPermission('customers', 'view')) return redirect()->route('customers.index');
+        if ($user->hasPermission('suppliers', 'view')) return redirect()->route('suppliers.index');
+        if ($user->hasPermission('reports', 'view')) return redirect()->route('reports.index');
+        if ($user->hasPermission('staff', 'view')) return redirect()->route('staff.index');
+        if ($user->hasPermission('staff', 'attendance')) return redirect()->route('staff.attendance-all');
+        
+        return abort(403, 'Your account has no module permissions.');
+    })->name('admin.index');
 
     Route::post('/branch/switch', [BranchController::class, 'switch'])->name('branch.switch');
     Route::put('/branches/{branch}/hours', [BranchController::class, 'updateHours'])->name('branches.update-hours')->middleware('permission:business,view');
@@ -130,7 +149,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-        // Purchase Management
+    });
+
+    // Purchase Management
+    Route::middleware(['permission:purchases,view'])->group(function() {
         Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
         Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
