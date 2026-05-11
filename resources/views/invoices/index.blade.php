@@ -337,7 +337,7 @@
             @if($invoices->hasPages()) <div class="pagination-wrap">{{ $invoices->links() }}</div> @endif
         </div>
     @endif
-
+    @endif
 @elseif($tab === 'purchases')
     @if(!$canViewPurchases)
         <div class="empty-state" style="background:#fff; border-radius:16px; border:2px dashed #fee2e2;">
