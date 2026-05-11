@@ -86,33 +86,25 @@
 
 {{-- Tabs --}}
 <div class="history-tabs">
-    @if(auth()->user()->hasPermission('sales', 'view'))
     <a href="{{ route('invoices.index', ['tab' => 'sales']) }}" class="tab-btn {{ $tab === 'sales' ? 'active' : '' }}">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
         Sales History
     </a>
-    @endif
 
-    @if(auth()->user()->hasPermission('purchases', 'view'))
     <a href="{{ route('invoices.index', ['tab' => 'purchases']) }}" class="tab-btn {{ $tab === 'purchases' ? 'active' : '' }}">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
         Purchase History
     </a>
-    @endif
 
-    @if(auth()->user()->hasPermission('reconciliation', 'view'))
     <a href="{{ route('invoices.index', ['tab' => 'reconciliation']) }}" class="tab-btn {{ $tab === 'reconciliation' ? 'active' : '' }}">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
         Reconciliation History
     </a>
-    @endif
 
-    @if(auth()->user()->hasPermission('sales', 'view'))
     <a href="{{ route('invoices.index', ['tab' => 'expenses']) }}" class="tab-btn {{ $tab === 'expenses' ? 'active' : '' }}">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         Expense History
     </a>
-    @endif
 </div>
 
 {{-- Header --}}
@@ -137,6 +129,13 @@
 
 {{-- Content Sections --}}
 @if($tab === 'sales')
+    @if(!$canViewSales)
+        <div class="empty-state" style="background:#fff; border-radius:16px; border:2px dashed #fee2e2;">
+            <svg width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <h3 style="color:#1e293b; font-weight:800; margin-bottom:8px;">Access Denied</h3>
+            <p style="color:#64748b;">You do not have permission to view Sales History. Please contact your administrator.</p>
+        </div>
+    @else
     {{-- Stats (Only for Sales for now) --}}
     <div class="stats-row">
         <div class="stat-card">
@@ -340,6 +339,13 @@
     @endif
 
 @elseif($tab === 'purchases')
+    @if(!$canViewPurchases)
+        <div class="empty-state" style="background:#fff; border-radius:16px; border:2px dashed #fee2e2;">
+            <svg width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <h3 style="color:#1e293b; font-weight:800; margin-bottom:8px;">Access Denied</h3>
+            <p style="color:#64748b;">You do not have permission to view Purchase History. Please contact your administrator.</p>
+        </div>
+    @else
     <div class="filter-panel">
         <div class="filter-title"><span>Filters</span></div>
         <form method="GET" action="{{ route('invoices.index') }}">
@@ -429,8 +435,16 @@
         </table>
         @if($purchases->hasPages()) <div class="pagination-wrap">{{ $purchases->links() }}</div> @endif
     </div>
+    @endif
 
 @elseif($tab === 'reconciliation')
+    @if(!$canViewReconciliation)
+        <div class="empty-state" style="background:#fff; border-radius:16px; border:2px dashed #fee2e2;">
+            <svg width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <h3 style="color:#1e293b; font-weight:800; margin-bottom:8px;">Access Denied</h3>
+            <p style="color:#64748b;">You do not have permission to view Reconciliation History. Please contact your administrator.</p>
+        </div>
+    @else
     <div class="filter-panel">
         <div class="filter-title"><span>Filters</span></div>
         <form method="GET" action="{{ route('invoices.index') }}">
@@ -491,7 +505,15 @@
         </table>
         @if($reconciliations->hasPages()) <div class="pagination-wrap">{{ $reconciliations->links() }}</div> @endif
     </div>
+    @endif
 @elseif($tab === 'expenses')
+    @if(!$canViewExpenses)
+        <div class="empty-state" style="background:#fff; border-radius:16px; border:2px dashed #fee2e2;">
+            <svg width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <h3 style="color:#1e293b; font-weight:800; margin-bottom:8px;">Access Denied</h3>
+            <p style="color:#64748b;">You do not have permission to view Expense History. Please contact your administrator.</p>
+        </div>
+    @else
     <div class="filter-panel">
         <div class="filter-title"><span>Filters</span></div>
         <form method="GET" action="{{ route('invoices.index') }}">
@@ -546,5 +568,6 @@
         </table>
         @if($expenses->hasPages()) <div class="pagination-wrap">{{ $expenses->links() }}</div> @endif
     </div>
+    @endif
 @endif
 @endsection

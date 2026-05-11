@@ -38,13 +38,11 @@ class InvoiceController extends Controller
             elseif ($canViewPurchases) $tab = 'purchases';
             elseif ($canViewReconciliation) $tab = 'reconciliation';
             elseif ($canViewExpenses) $tab = 'expenses';
+            else $tab = 'sales'; // Default to sales if nothing else
         }
 
-        // Security check
-        if ($tab === 'sales' && !$canViewSales) return redirect()->route('invoices.index');
-        if ($tab === 'purchases' && !$canViewPurchases) return redirect()->route('invoices.index');
-        if ($tab === 'reconciliation' && !$canViewReconciliation) return redirect()->route('invoices.index');
-        if ($tab === 'expenses' && !$canViewExpenses) return redirect()->route('invoices.index');
+        // We will handle specific permission checks INSIDE the sections below or in the view
+        // to show a friendly "Forbidden" message instead of a hard 403 redirect.
 
         if ($tab === 'purchases') {
             return $this->purchaseHistory($request);
@@ -188,7 +186,10 @@ class InvoiceController extends Controller
         }
         $periodInvoices = $periodQuery->count();
 
-        return view('invoices.index', compact('invoices', 'totalSales', 'totalInvoices', 'periodInvoices'));
+        return view('invoices.index', compact(
+            'invoices', 'totalSales', 'totalInvoices', 'periodInvoices',
+            'canViewSales', 'canViewPurchases', 'canViewReconciliation', 'canViewExpenses'
+        ));
     }
 
     /**
@@ -360,12 +361,21 @@ class InvoiceController extends Controller
 
         $purchases = $query->latest('order_date')->paginate(20)->withQueryString();
         $suppliers = Supplier::where('is_active', true)->get();
+        $user = auth()->user();
+        $canViewSales = $user->hasPermission('sales', 'view');
+        $canViewPurchases = $user->hasPermission('purchases', 'view');
+        $canViewReconciliation = $user->hasPermission('reconciliation', 'view');
+        $canViewExpenses = $user->hasPermission('sales', 'view');
 
-        return view('invoices.index', compact('purchases', 'suppliers'));
+        return view('invoices.index', compact(
+            'purchases', 'suppliers',
+            'canViewSales', 'canViewPurchases', 'canViewReconciliation', 'canViewExpenses'
+        ));
     }
 
     public function reconciliationHistory(Request $request)
     {
+        $user = auth()->user();
         $query = CashReconciliation::with('user');
 
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -379,11 +389,20 @@ class InvoiceController extends Controller
 
         $reconciliations = $query->latest('date')->paginate(20)->withQueryString();
 
-        return view('invoices.index', compact('reconciliations'));
+        $canViewSales = $user->hasPermission('sales', 'view');
+        $canViewPurchases = $user->hasPermission('purchases', 'view');
+        $canViewReconciliation = $user->hasPermission('reconciliation', 'view');
+        $canViewExpenses = $user->hasPermission('sales', 'view');
+
+        return view('invoices.index', compact(
+            'reconciliations',
+            'canViewSales', 'canViewPurchases', 'canViewReconciliation', 'canViewExpenses'
+        ));
     }
 
     public function expenseHistory(Request $request)
     {
+        $user = auth()->user();
         $query = Expense::with('user');
 
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -393,6 +412,14 @@ class InvoiceController extends Controller
 
         $expenses = $query->latest('created_at')->paginate(20)->withQueryString();
 
-        return view('invoices.index', compact('expenses'));
+        $canViewSales = $user->hasPermission('sales', 'view');
+        $canViewPurchases = $user->hasPermission('purchases', 'view');
+        $canViewReconciliation = $user->hasPermission('reconciliation', 'view');
+        $canViewExpenses = $user->hasPermission('sales', 'view');
+
+        return view('invoices.index', compact(
+            'expenses',
+            'canViewSales', 'canViewPurchases', 'canViewReconciliation', 'canViewExpenses'
+        ));
     }
 }
