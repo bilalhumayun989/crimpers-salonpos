@@ -75,8 +75,8 @@
             <span class="stat-value">PKR {{ number_format($s->base_salary, 2) }}</span>
         </div>
         <div class="stat-row">
-            <span class="stat-label">Commission/Svc</span>
-            <span class="stat-value">PKR {{ number_format($s->commission_per_service, 2) }}</span>
+            <span class="stat-label">Commission/Customer</span>
+            <span class="stat-value">PKR {{ number_format($s->commission_per_customer, 2) }}</span>
         </div>
         <div class="stat-row" style="background:#fffdf0; border-radius:4px; padding:8px;">
             <span class="stat-label">Total Earned</span>
@@ -93,7 +93,7 @@
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 Set Shift
             </button>
-            <button class="btn-hrms" onclick="editSalary({{ $s->id }}, {{ $s->base_salary }}, {{ $s->commission_per_service }}, '{{ $s->shift_start }}', '{{ $s->shift_end }}')">Settings</button>
+            <button class="btn-hrms" onclick="editSalary({{ $s->id }}, {{ $s->base_salary }}, {{ $s->commission_per_customer }}, '{{ $s->shift_start }}', '{{ $s->shift_end }}')">Settings</button>
         </div>
     </div>
     @endforeach
@@ -131,7 +131,7 @@
             <input type="number" id="edit-base-salary" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
         </div>
         <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:4px;">Commission per Service (PKR)</label>
+            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:4px;">Commission per Customer (PKR)</label>
             <input type="number" id="edit-commission" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
         </div>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
@@ -213,7 +213,7 @@ function saveSalary() {
         body: JSON.stringify({ 
             staff_id: id, 
             base_salary: base, 
-            commission_per_service: commission,
+            commission_per_customer: commission,
             shift_start: start,
             shift_end: end
         })

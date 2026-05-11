@@ -55,10 +55,10 @@ class StaffHRMSController extends Controller
     {
         $staff = Staff::findOrFail($request->staff_id);
         $staff->update([
-            'base_salary' => $request->base_salary,
-            'commission_per_service' => $request->commission_per_service,
-            'shift_start' => $request->shift_start,
-            'shift_end' => $request->shift_end,
+            'base_salary'             => $request->base_salary,
+            'commission_per_customer' => $request->commission_per_customer,
+            'shift_start'             => $request->shift_start,
+            'shift_end'               => $request->shift_end,
         ]);
 
         return response()->json(['success' => true]);
