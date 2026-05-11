@@ -447,6 +447,34 @@
                 </div>
             </div>
 
+            {{-- Compensation --}}
+            <div class="form-card">
+                <div class="form-card-head">
+                    <div class="form-card-head-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                        </svg>
+                    </div>
+                    <span class="form-card-head-title">Compensation & Commission</span>
+                </div>
+                <div class="form-card-body">
+                    <div class="f-grid-2">
+                        <div class="f-group">
+                            <label class="f-label">Base Salary <span>(PKR / month)</span></label>
+                            <input type="number" name="base_salary" value="{{ old('base_salary', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 25000">
+                        </div>
+                        <div class="f-group">
+                            <label class="f-label">Commission per Customer <span>(PKR)</span></label>
+                            <input type="number" name="commission_per_customer" value="{{ old('commission_per_customer', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 50">
+                        </div>
+                    </div>
+                    <p style="margin-top:10px; font-size:.78rem; color:#94a3b8;">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Commission is earned per customer served. Total pay = Base Salary + (Commission × Customers Served).
+                    </p>
+                </div>
+            </div>
+
             {{-- Services --}}
             @if($services->count())
                 <div class="form-card">
