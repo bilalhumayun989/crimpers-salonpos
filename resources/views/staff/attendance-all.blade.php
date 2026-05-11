@@ -31,9 +31,17 @@
 .date-label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
 .f-date-input { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; font-size: 0.85rem; font-family: inherit; color: #1e293b; outline: none; transition: 0.2s; }
 .f-date-input:focus { border-color: #c9a800; box-shadow: 0 0 0 3px rgba(199,168,0,0.1); }
+.page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.page-title { font-size: 1.4rem; font-weight: 800; color: #0f172a; margin: 0 0 3px; }
+.page-sub { font-size: .85rem; color: #64748b; margin: 0; }
+.back-btn { width: 38px; height: 38px; border-radius: 10px; background: #f4f4f5; border: 1.5px solid #e4e4e7; display: flex; align-items: center; justify-content: center; color: #52525b; text-decoration: none; transition: .2s; flex-shrink: 0; }
+.back-btn:hover { background: #e4e4e7; color: #18181b; }
 </style>
 
 <div class="page-header">
+    <a href="{{ route('staff.hrms') }}" class="back-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
     <div>
         <div class="page-title">Attendance History</div>
         <div class="page-sub">Review daily attendance logs and staff participation</div>
