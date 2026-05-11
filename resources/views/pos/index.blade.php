@@ -483,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <div class="qty-ctrl">
           <button class="qty-btn minus" data-idx="${idx}">−</button>
-          <span class="qty-num">${item.qty}</span>
+          <input type="number" class="qty-num" data-idx="${idx}" value="${item.qty}" min="1" style="width:40px; border:none; background:transparent; text-align:center; font-family:inherit; font-size:.85rem; font-weight:800; outline:none; -moz-appearance: textfield;">
           <button class="qty-btn plus" data-idx="${idx}">+</button>
         </div>
         <div class="cart-row-price">PKR ${item.sub.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
@@ -491,6 +491,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     checkBtn.disabled = false;
     setTotals(cart.reduce((s, i) => s + i.sub, 0));
+
+    cartEl.querySelectorAll('.qty-num').forEach(input => {
+      input.onchange = e => {
+        const i = parseInt(e.target.dataset.idx);
+        let newQty = parseInt(e.target.value);
+        if (isNaN(newQty) || newQty < 1) newQty = 1;
+        cart[i].qty = newQty;
+        cart[i].sub = cart[i].qty * cart[i].price;
+        renderCart();
+      };
+      // Prevent scrolling from changing value
+      input.onwheel = e => e.preventDefault();
+    });
 
     cartEl.querySelectorAll('.minus').forEach(b => b.onclick = e => {
       const i = parseInt(e.currentTarget.dataset.idx);
