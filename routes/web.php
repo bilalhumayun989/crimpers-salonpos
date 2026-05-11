@@ -61,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
         if ($user->hasPermission('inventory', 'view')) return redirect()->route('products.index');
         if ($user->hasPermission('customers', 'view')) return redirect()->route('customers.index');
         if ($user->hasPermission('suppliers', 'view')) return redirect()->route('suppliers.index');
-        if ($user->hasPermission('reports', 'view')) return redirect()->route('reports.index');
+        if ($user->hasPermission('history', 'access')) return redirect()->route('invoices.index');
         if ($user->hasPermission('staff', 'view')) return redirect()->route('staff.index');
         if ($user->hasPermission('staff', 'attendance')) return redirect()->route('staff.attendance-all');
         
@@ -80,15 +80,25 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pos/payment', [POSController::class, 'payment'])->name('pos.payment');
     });
 
-    Route::middleware(['permission:sales,view'])->group(function() {
+    // History & Invoices (General Access)
+    Route::middleware(['permission:history,access'])->group(function() {
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('/invoices-export', [InvoiceController::class, 'export'])->name('invoices.export');
         Route::get('/invoices/{invoice}/whatsapp-share', [WhatsAppController::class, 'shareInvoice'])->name('invoice.whatsapp.share');
+    });
+
+    // Specific Sales/History Sub-permissions
+    Route::middleware(['permission:sales,view'])->group(function() {
+        // Any sales-specific routes that aren't general history would go here
+    });
+
+    Route::middleware(['permission:reconciliation,access'])->group(function() {
         Route::get('/reconciliation', [ReconciliationController::class, 'index'])->name('reconciliation.index');
         Route::post('/reconciliation', [ReconciliationController::class, 'store'])->name('reconciliation.store');
-        
-        // Expenses
+    });
+
+    Route::middleware(['permission:expenses,create'])->group(function() {
         Route::get('/expenses/create', [App\Http\Controllers\ExpenseController::class, 'create'])->name('expenses.create');
         Route::post('/expenses', [App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
     });
