@@ -163,7 +163,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Purchase Management
     Route::middleware(['permission:purchases,view'])->group(function() {
-        Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+        Route::get('/purchases', function() {
+            return redirect()->route('invoices.index', ['tab' => 'purchases']);
+        })->name('purchases.index');
         Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
         Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
