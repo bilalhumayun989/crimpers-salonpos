@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
             $table->morphs('itemizable'); // itemizable_id, itemizable_type (Product or Service)
             $table->integer('quantity');
-            $table->decimal('price', 10, 2);
-            $table->decimal('subtotal', 10, 2);
+            $table->decimal('price', 60, 2);
+            $table->decimal('subtotal', 60, 2);
             $table->timestamps();
         });
     }

@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('position');
-            $table->decimal('hourly_rate', 8, 2)->default(0);
+            $table->decimal('hourly_rate', 60, 2)->default(0);
             $table->date('hiring_date');
             $table->boolean('status')->default(true);
             $table->text('bio')->nullable();

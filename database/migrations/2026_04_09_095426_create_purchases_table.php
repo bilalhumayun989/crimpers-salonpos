@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('expected_delivery_date')->nullable();
             $table->date('actual_delivery_date')->nullable();
             $table->enum('status', ['ordered', 'partially_received', 'received', 'cancelled'])->default('ordered');
-            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->decimal('total_amount', 60, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();
         });

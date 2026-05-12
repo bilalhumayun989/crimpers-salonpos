@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 60, 2);
             $table->integer('duration')->comment('Duration in minutes');
             $table->string('image')->nullable();
             $table->boolean('is_popular')->default(false);

@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('invoice_no')->unique();
             $table->foreignId('user_id')->constrained();
-            $table->decimal('total_amount', 10, 2);
-            $table->decimal('tax', 10, 2)->default(0);
-            $table->decimal('discount', 10, 2)->default(0);
-            $table->decimal('payable_amount', 10, 2);
+            $table->decimal('total_amount', 60, 2);
+            $table->decimal('tax', 60, 2)->default(0);
+            $table->decimal('discount', 60, 2)->default(0);
+            $table->decimal('payable_amount', 60, 2);
             $table->string('payment_method')->comment('cash, card, qr');
             $table->enum('status', ['paid', 'pending', 'cancelled'])->default('paid');
             $table->timestamps();

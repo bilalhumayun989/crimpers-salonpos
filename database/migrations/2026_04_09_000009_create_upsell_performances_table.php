@@ -12,9 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('staff_id')->constrained('staff')->onDelete('cascade');
             $table->integer('total_upsells')->default(0);
-            $table->decimal('upsell_revenue', 10, 2)->default(0);
+            $table->decimal('upsell_revenue', 60, 2)->default(0);
             $table->decimal('conversion_rate', 5, 2)->default(0);
-            $table->decimal('average_upsell_value', 8, 2)->default(0);
+            $table->decimal('average_upsell_value', 60, 2)->default(0);
             $table->dateTime('last_upsell_date')->nullable();
             $table->timestamps();
             $table->unique('staff_id');

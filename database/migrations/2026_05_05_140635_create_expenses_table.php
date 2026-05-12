@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->text('description'); // Will be encrypted via model
-            $table->decimal('amount', 10, 2);
+            $table->decimal('amount', 60, 2);
             $table->boolean('deducted_from_drawer')->default(false);
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
