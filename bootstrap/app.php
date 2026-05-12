@@ -16,5 +16,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
+            // Check for MySQL "Out of range" error (1264) or "Numeric value out of range" (SQLSTATE 22003)
+            if (str_contains($e->getMessage(), '1264') || str_contains($e->getMessage(), '22003')) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maximum value exceeded. Please enter a smaller number.'
+                    ], 422);
+                }
+                return back()->withInput()->withErrors(['amount' => 'Maximum value exceeded. Please enter a smaller number.']);
+            }
+        });
     })->create();
