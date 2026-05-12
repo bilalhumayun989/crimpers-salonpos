@@ -221,9 +221,9 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['permission:admin,all'])->group(function() {
             Route::get('/staff-roles/create', [StaffRoleController::class, 'create'])->name('staff-roles.create');
             Route::post('/staff-roles', [StaffRoleController::class, 'store'])->name('staff-roles.store');
-            Route::get('/staff-roles/{staff_role}/edit', [StaffRoleController::class, 'edit'])->name('staff-roles.edit');
-            Route::put('/staff-roles/{staff_role}', [StaffRoleController::class, 'update'])->name('staff-roles.update');
-            Route::delete('/staff-roles/{staff_role}', [StaffRoleController::class, 'destroy'])->name('staff-roles.destroy');
+            Route::get('/staff-roles/{staffRole}/edit', [StaffRoleController::class, 'edit'])->name('staff-roles.edit');
+            Route::put('/staff-roles/{staffRole}', [StaffRoleController::class, 'update'])->name('staff-roles.update');
+            Route::delete('/staff-roles/{staffRole}', [StaffRoleController::class, 'destroy'])->name('staff-roles.destroy');
         });
     });
 
