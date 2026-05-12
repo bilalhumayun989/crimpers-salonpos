@@ -200,6 +200,8 @@ class StaffController extends Controller
             'notes'          => 'nullable|string|max:255',
         ]);
 
+        $validated['break_duration'] = $validated['break_duration'] ?? 0;
+
         $staff->shifts()->create($validated);
 
         return redirect()->route('staff.show', $staff)->with('success', 'Shift scheduled successfully.');
