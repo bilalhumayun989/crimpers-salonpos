@@ -327,7 +327,6 @@
                     </div>
 
                     <div class="staff-card-foot">
-                        <a href="{{ route('staff.show', $member) }}" class="btn-sm">View</a>
                         <a href="{{ route('staff.edit', $member) }}" class="btn-sm">Edit</a>
                         <button type="button" class="btn-sm btn-sm-del"
                             onclick="openDeleteModal('{{ route('staff.destroy', $member) }}', '{{ addslashes($member->name) }}')">Delete</button>

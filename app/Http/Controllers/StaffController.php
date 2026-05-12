@@ -32,25 +32,25 @@ class StaffController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'                    => 'required|string|max:255',
-            'email'                   => 'nullable|email|unique:staff,email|unique:users,email',
-            'password'                => 'nullable|string|min:8|confirmed',
-            'phone'                   => 'nullable|string',
-            'staff_role_id'           => 'nullable|exists:staff_roles,id',
-            'hourly_rate'             => 'nullable|numeric|min:0',
-            'base_salary'             => 'nullable|numeric|min:0',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:staff,email|unique:users,email',
+            'password' => 'nullable|string|min:8|confirmed',
+            'phone' => 'nullable|string',
+            'staff_role_id' => 'nullable|exists:staff_roles,id',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'base_salary' => 'nullable|numeric|min:0',
             'commission_per_customer' => 'nullable|numeric|min:0',
-            'hiring_date'             => 'nullable|date',
-            'status'                  => 'nullable|boolean',
-            'bio'                     => 'nullable|string',
-            'service_ids'             => 'nullable|array',
+            'hiring_date' => 'nullable|date',
+            'status' => 'nullable|boolean',
+            'bio' => 'nullable|string',
+            'service_ids' => 'nullable|array',
         ]);
 
-        $validated['hourly_rate']             = $validated['hourly_rate'] ?? 0;
-        $validated['base_salary']             = $validated['base_salary'] ?? 0;
+        $validated['hourly_rate'] = $validated['hourly_rate'] ?? 0;
+        $validated['base_salary'] = $validated['base_salary'] ?? 0;
         $validated['commission_per_customer'] = $validated['commission_per_customer'] ?? 0;
         $validated['hiring_date'] = $validated['hiring_date'] ?? now();
-        $validated['position']    = 'Employee';
+        $validated['position'] = 'Employee';
 
         $staff = Staff::create($validated);
         $staff->services()->sync($request->input('service_ids', []));
@@ -59,10 +59,10 @@ class StaffController extends Controller
         // Create a User login account ONLY if email and password are provided
         if (!empty($validated['email']) && !empty($validated['password'])) {
             User::create([
-                'name'          => $validated['name'],
-                'email'         => $validated['email'],
-                'password'      => Hash::make($validated['password']),
-                'role'          => 'staff',
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'staff',
                 'staff_role_id' => $validated['staff_role_id'] ?? null,
             ]);
             $msg = 'Staff member added and login account created.';
@@ -84,9 +84,9 @@ class StaffController extends Controller
             ->whereYear('attendance_date', now()->year)
             ->whereMonth('attendance_date', now()->month)
             ->sum('check_out_time') - $staff->attendances()
-            ->whereYear('attendance_date', now()->year)
-            ->whereMonth('attendance_date', now()->month)
-            ->sum('check_in_time');
+                ->whereYear('attendance_date', now()->year)
+                ->whereMonth('attendance_date', now()->month)
+                ->sum('check_in_time');
 
         return view('staff.show', compact('staff', 'attendances', 'shifts', 'leaveRequests', 'upsellPerformance', 'monthlyHours'));
     }
@@ -101,16 +101,16 @@ class StaffController extends Controller
     public function update(Request $request, Staff $staff)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'nullable|email|unique:staff,email,' . $staff->id,
-            'password'      => 'nullable|string|min:8|confirmed',
-            'phone'         => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:staff,email,' . $staff->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'phone' => 'nullable|string',
             'staff_role_id' => 'nullable|exists:staff_roles,id',
-            'hourly_rate'   => 'nullable|numeric|min:0',
-            'hiring_date'   => 'nullable|date',
-            'status'        => 'nullable|boolean',
-            'bio'           => 'nullable|string',
-            'service_ids'   => 'nullable|array',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'hiring_date' => 'nullable|date',
+            'status' => 'nullable|boolean',
+            'bio' => 'nullable|string',
+            'service_ids' => 'nullable|array',
         ]);
 
         $staff->update($validated);
@@ -120,8 +120,8 @@ class StaffController extends Controller
         $user = User::where('email', $staff->getOriginal('email'))->first();
         if ($user) {
             $userUpdate = [
-                'name'          => $validated['name'],
-                'email'         => $validated['email'],
+                'name' => $validated['name'],
+                'email' => $validated['email'],
                 'staff_role_id' => $validated['staff_role_id'] ?? null,
             ];
             if (!empty($validated['password'])) {
@@ -130,7 +130,7 @@ class StaffController extends Controller
             $user->update($userUpdate);
         }
 
-        return redirect()->route('staff.show', $staff)->with('success', 'Staff member updated.');
+        return redirect()->route('staff.index')->with('success', 'Staff member updated.');
     }
 
     public function destroy(Staff $staff)
@@ -142,7 +142,7 @@ class StaffController extends Controller
             $staff->upsellPerformance->delete();
         }
         $staff->services()->detach();
-        
+
         $staff->delete();
         return redirect()->route('staff.index')->with('success', 'Staff member and all their records successfully deleted.');
     }
@@ -153,7 +153,7 @@ class StaffController extends Controller
             $records = $staff->attendances()->latest('attendance_date')->paginate(15);
             return view('staff.attendance', compact('staff', 'records'));
         }
-        
+
         $query = StaffAttendance::with('staff');
 
         if ($request->filled('date_from')) {
@@ -166,7 +166,7 @@ class StaffController extends Controller
         $records = $query->orderBy('attendance_date', 'desc')
             ->orderBy('staff_id')
             ->get();
-            
+
         return view('staff.attendance-all', compact('records'));
     }
 
@@ -192,15 +192,13 @@ class StaffController extends Controller
     public function storeShiftInline(Request $request, Staff $staff)
     {
         $validated = $request->validate([
-            'shift_date'     => 'required|date',
-            'shift_type'     => 'required|in:morning,afternoon,evening,full_day',
-            'start_time'     => 'required|date_format:H:i',
-            'end_time'       => 'required|date_format:H:i',
+            'shift_date' => 'required|date',
+            'shift_type' => 'required|in:morning,afternoon,evening,full_day',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
             'break_duration' => 'nullable|numeric|min:0',
-            'notes'          => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:255',
         ]);
-
-        $validated['break_duration'] = $validated['break_duration'] ?? 0;
 
         $staff->shifts()->create($validated);
 
@@ -228,12 +226,12 @@ class StaffController extends Controller
     public function storeShift(Request $request, Staff $staff)
     {
         $validated = $request->validate([
-            'shift_date'     => 'required|date',
-            'start_time'     => 'required|date_format:H:i',
-            'end_time'       => 'required|date_format:H:i',
-            'shift_type'     => 'required|in:morning,afternoon,evening,full_day',
+            'shift_date' => 'required|date',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'shift_type' => 'required|in:morning,afternoon,evening,full_day',
             'break_duration' => 'nullable|numeric|min:0',
-            'notes'          => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $staff->shifts()->create($validated);
@@ -261,8 +259,8 @@ class StaffController extends Controller
         $validated = $request->validate([
             'leave_type' => 'required|in:sick,vacation,personal,unpaid',
             'start_date' => 'required|date',
-            'end_date'   => 'required|date|after_or_equal:start_date',
-            'reason'     => 'nullable|string',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'nullable|string',
         ]);
 
         $staff->leaveRequests()->create([
@@ -276,7 +274,7 @@ class StaffController extends Controller
     public function approveLeave(LeaveRequest $leave)
     {
         $leave->update([
-            'status'      => 'approved',
+            'status' => 'approved',
             'approved_by' => Auth::id() ?? 1,
             'approved_at' => now(),
         ]);
