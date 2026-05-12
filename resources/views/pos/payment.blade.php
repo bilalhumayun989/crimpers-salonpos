@@ -495,11 +495,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('modal-inv-no').textContent = 'Invoice #' + data.invoice.invoice_no;
         document.getElementById('invoice-modal').style.display = 'flex';
       } else {
-        console.error('Payment Error:', data.message);
+        alert(data.message || 'Payment failed. Please check the amounts.');
         btn.disabled = false; btn.textContent = 'Complete Payment';
       }
     } catch(e) {
         console.error('Network/Logic Error:', e);
+        alert('An unexpected error occurred. If you entered an extremely large number, please try a smaller one.');
         btn.disabled = false; btn.textContent = 'Complete Payment';
     }
   });
