@@ -98,22 +98,21 @@ class ProductController extends Controller
                         'total_amount' => $product->current_stock * ($product->cost_price ?? 0),
                         'notes' => 'Initial stock on product creation'
                     ]);
-                }
-            }
 
-                if (isset($purchase) && $purchase->id) {
-                    $purchase->update([
-                        'purchase_order_number' => 'PO-' . date('Y') . '-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT)
-                    ]);
+                    if ($purchase && $purchase->id) {
+                        $purchase->update([
+                            'purchase_order_number' => 'PO-' . date('Y') . '-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT)
+                        ]);
 
-                    PurchaseItem::create([
-                        'purchase_id' => $purchase->id,
-                        'product_id' => $product->id,
-                        'quantity_ordered' => $product->current_stock,
-                        'quantity_received' => $product->current_stock,
-                        'unit_cost' => $product->cost_price ?? 0,
-                        'line_total' => $product->current_stock * ($product->cost_price ?? 0)
-                    ]);
+                        PurchaseItem::create([
+                            'purchase_id' => $purchase->id,
+                            'product_id' => $product->id,
+                            'quantity_ordered' => $product->current_stock,
+                            'quantity_received' => $product->current_stock,
+                            'unit_cost' => $product->cost_price ?? 0,
+                            'line_total' => $product->current_stock * ($product->cost_price ?? 0)
+                        ]);
+                    }
                 }
             }
         });
