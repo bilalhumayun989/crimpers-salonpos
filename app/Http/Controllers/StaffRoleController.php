@@ -48,21 +48,21 @@ class StaffRoleController extends Controller
         return redirect()->route('staff-roles.index')->with('success', 'Role created successfully.');
     }
 
-    public function edit(StaffRole $staffRole)
+    public function edit(StaffRole $staff_role)
     {
-        return view('staff_roles.edit', compact('staffRole'));
+        return view('staff_roles.edit', ['staffRole' => $staff_role]);
     }
 
-    public function update(Request $request, StaffRole $staffRole)
+    public function update(Request $request, StaffRole $staff_role)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:staff_roles,name,' . $staffRole->id,
+            'name' => 'required|string|max:255|unique:staff_roles,name,' . $staff_role->id,
             'description' => 'nullable|string',
-            'email' => 'nullable|email|unique:staff_roles,email,' . $staffRole->id . '|unique:users,email',
+            'email' => 'nullable|email|unique:staff_roles,email,' . $staff_role->id . '|unique:users,email',
             'password' => 'nullable|string|min:8',
         ]);
 
-        $oldEmail = $staffRole->email;
+        $oldEmail = $staff_role->email;
 
         if ($request->filled('password')) {
             $validated['password'] = Hash::make($request->password);
@@ -70,28 +70,28 @@ class StaffRoleController extends Controller
             unset($validated['password']);
         }
 
-        $staffRole->update($validated);
+        $staff_role->update($validated);
 
         // Sync with User
-        if ($staffRole->email) {
+        if ($staff_role->email) {
             $user = User::where('email', $oldEmail)->first();
-            if ($user && $user->staff_role_id == $staffRole->id) {
+            if ($user && $user->staff_role_id == $staff_role->id) {
                 $user->update([
-                    'name' => $staffRole->name . ' Account',
-                    'email' => $staffRole->email,
+                    'name' => $staff_role->name . ' Account',
+                    'email' => $staff_role->email,
                 ]);
                 if ($request->filled('password')) {
-                    $user->update(['password' => $staffRole->password]);
+                    $user->update(['password' => $staff_role->password]);
                 }
             } elseif (!$user) {
                 // Create if not exists but we have email/pass now
                 if ($request->filled('password')) {
                     User::create([
-                        'name' => $staffRole->name . ' Account',
-                        'email' => $staffRole->email,
-                        'password' => $staffRole->password,
+                        'name' => $staff_role->name . ' Account',
+                        'email' => $staff_role->email,
+                        'password' => $staff_role->password,
                         'role' => 'staff',
-                        'staff_role_id' => $staffRole->id,
+                        'staff_role_id' => $staff_role->id,
                     ]);
                 }
             }
@@ -110,35 +110,35 @@ class StaffRoleController extends Controller
         return view('staff_roles.permissions', compact('roles', 'selectedRole'));
     }
 
-    public function savePermissions(Request $request, StaffRole $staffRole)
+    public function savePermissions(Request $request, StaffRole $staff_role)
     {
         // 1. Update Permissions & Branch Assignment
         $branchId = $request->role_branch_id === 'all' ? null : $request->role_branch_id;
 
-        $staffRole->update([
+        $staff_role->update([
             'permissions' => $request->input('permissions', []),
             'branch_id' => $branchId
         ]);
 
         // 2. Sync branch_id with ALL Users assigned to this role
         // This ensures staff members instantly move to the new branch assignment.
-        User::where('staff_role_id', $staffRole->id)->update(['branch_id' => $branchId]);
+        User::where('staff_role_id', $staff_role->id)->update(['branch_id' => $branchId]);
 
         // 3. Update Role-Level Account (Master)
         if ($request->filled('role_email')) {
-            $oldRoleEmail = $staffRole->email;
-            $staffRole->email = $request->role_email;
+            $oldRoleEmail = $staff_role->email;
+            $staff_role->email = $request->role_email;
             if ($request->filled('role_password')) {
-                $staffRole->password = Hash::make($request->role_password);
+                $staff_role->password = Hash::make($request->role_password);
             }
-            $staffRole->save();
+            $staff_role->save();
 
             // Sync with Role-Level User record
-            $roleUser = User::where('staff_role_id', $staffRole->id)->where('email', $oldRoleEmail)->first();
+            $roleUser = User::where('staff_role_id', $staff_role->id)->where('email', $oldRoleEmail)->first();
             if ($roleUser) {
                 $roleUser->email = $request->role_email;
                 if ($request->filled('role_password')) {
-                    $roleUser->password = $staffRole->password;
+                    $roleUser->password = $staff_role->password;
                 }
                 $roleUser->save();
             }
@@ -165,19 +165,19 @@ class StaffRoleController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'Business settings and user logins updated for ' . $staffRole->name);
+        return redirect()->back()->with('success', 'Business settings and user logins updated for ' . $staff_role->name);
     }
 
-    public function destroy(StaffRole $staffRole)
+    public function destroy(StaffRole $staff_role)
     {
-        if ($staffRole->staff()->count() > 0) {
+        if ($staff_role->staff()->count() > 0) {
             return redirect()->back()->with('error', 'Cannot delete role which is assigned to active employees. Reassign them first.');
         }
 
         // Delete any backend User accounts that are bound to this role directly
-        User::where('staff_role_id', $staffRole->id)->delete();
+        User::where('staff_role_id', $staff_role->id)->delete();
 
-        $staffRole->delete();
+        $staff_role->delete();
         return redirect()->route('staff-roles.index')->with('success', 'Role and its associated login successfully deleted.');
     }
 }
