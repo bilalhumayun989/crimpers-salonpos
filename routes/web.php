@@ -215,15 +215,15 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:business,view'])->group(function() {
         Route::get('/staff-roles', [StaffRoleController::class, 'index'])->name('staff-roles.index');
         Route::get('/business-settings', [StaffRoleController::class, 'permissions'])->name('business-settings.index');
-        Route::post('/business-settings/{staff_role}', [StaffRoleController::class, 'savePermissions'])->name('business-settings.update');
+        Route::post('/business-settings/{id}', [StaffRoleController::class, 'savePermissions'])->name('business-settings.update');
         
         // Strict Admin actions for roles
         Route::middleware(['permission:admin,all'])->group(function() {
             Route::get('/staff-roles/create', [StaffRoleController::class, 'create'])->name('staff-roles.create');
             Route::post('/staff-roles', [StaffRoleController::class, 'store'])->name('staff-roles.store');
-            Route::get('/staff-roles/{staff_role}/edit', [StaffRoleController::class, 'edit'])->name('staff-roles.edit');
-            Route::put('/staff-roles/{staff_role}', [StaffRoleController::class, 'update'])->name('staff-roles.update');
-            Route::delete('/staff-roles/{staff_role}', [StaffRoleController::class, 'destroy'])->name('staff-roles.destroy');
+            Route::get('/staff-roles/{id}/edit', [StaffRoleController::class, 'edit'])->name('staff-roles.edit');
+            Route::put('/staff-roles/{id}', [StaffRoleController::class, 'update'])->name('staff-roles.update');
+            Route::delete('/staff-roles/{id}', [StaffRoleController::class, 'destroy'])->name('staff-roles.destroy');
         });
     });
 

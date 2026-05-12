@@ -21,13 +21,4 @@ class StaffRole extends Model
     {
         return $this->hasMany(Staff::class);
     }
-
-    /**
-     * Retrieve the model for a bound value.
-     * Bypassing branch scope to allow admins to edit roles from any branch.
-     */
-    public function resolveRouteBinding($value, $field = null)
-    {
-        return $this->withoutGlobalScopes()->where($field ?? 'id', $value)->first();
-    }
 }
