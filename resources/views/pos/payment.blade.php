@@ -132,6 +132,10 @@
     </div>
 
     <div class="pay-right-body">
+      <div id="pos-error-alert" style="display:none; background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-weight: 600; font-size: 0.85rem; align-items: center; gap: 10px;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="pos-error-text"></span>
+      </div>
 
       <div class="f-grp">
         <span class="f-lbl">Performed By (Staff)</span>
@@ -485,6 +489,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (payload.change_returned < 0) payload.change_returned = 0;
 
     try {
+      // Hide error alert before starting
+      document.getElementById('pos-error-alert').style.display = 'none';
+
       var res  = await fetch("{{ route('pos.store') }}", {
         method : 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
@@ -495,15 +502,23 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('modal-inv-no').textContent = 'Invoice #' + data.invoice.invoice_no;
         document.getElementById('invoice-modal').style.display = 'flex';
       } else {
-        alert(data.message || 'Payment failed. Please check the amounts.');
+        showPosError(data.message || 'Payment failed. Please check the amounts.');
         btn.disabled = false; btn.textContent = 'Complete Payment';
       }
     } catch(e) {
         console.error('Network/Logic Error:', e);
-        alert('An unexpected error occurred. If you entered an extremely large number, please try a smaller one.');
+        showPosError('An unexpected error occurred. If you entered an extremely large number, please try a smaller one.');
         btn.disabled = false; btn.textContent = 'Complete Payment';
     }
   });
+
+  function showPosError(msg) {
+    const errDiv = document.getElementById('pos-error-alert');
+    const errText = document.getElementById('pos-error-text');
+    errText.textContent = msg;
+    errDiv.style.display = 'flex';
+    errDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   document.getElementById('close-modal').onclick = function() {
     localStorage.removeItem('pos_checkout_session');
