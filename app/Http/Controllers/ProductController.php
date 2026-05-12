@@ -75,7 +75,9 @@ class ProductController extends Controller
             'min_stock_level' => 'required|numeric|min:0',
             'product_type' => 'required|in:retail,service_supply',
             'sku' => 'nullable|string|unique:products,sku',
-            'track_inventory' => 'nullable'
+            'track_inventory' => 'nullable',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'category_id' => 'nullable|exists:categories,id'
         ]);
 
         $validated['track_inventory'] = $request->has('track_inventory');
@@ -85,16 +87,21 @@ class ProductController extends Controller
 
             // If initial stock is > 0, record it as a purchase history
             if ($product->current_stock > 0) {
-                $purchase = Purchase::create([
-                    'purchase_order_number' => 'INIT-' . strtoupper(bin2hex(random_bytes(3))),
-                    'supplier_id' => $product->supplier_id ?? Supplier::first()->id ?? null,
-                    'order_date' => now(),
-                    'status' => 'received',
-                    'total_amount' => $product->current_stock * ($product->cost_price ?? 0),
-                    'notes' => 'Initial stock on product creation'
-                ]);
+                $supplierId = $product->supplier_id ?? Supplier::first()->id ?? null;
+                
+                if ($supplierId) {
+                    $purchase = Purchase::create([
+                        'purchase_order_number' => 'INIT-' . strtoupper(bin2hex(random_bytes(3))),
+                        'supplier_id' => $supplierId,
+                        'order_date' => now(),
+                        'status' => 'received',
+                        'total_amount' => $product->current_stock * ($product->cost_price ?? 0),
+                        'notes' => 'Initial stock on product creation'
+                    ]);
+                }
+            }
 
-                if ($purchase->id) {
+                if (isset($purchase) && $purchase->id) {
                     $purchase->update([
                         'purchase_order_number' => 'PO-' . date('Y') . '-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT)
                     ]);
