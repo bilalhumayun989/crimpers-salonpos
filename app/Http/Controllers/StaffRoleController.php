@@ -55,10 +55,13 @@ class StaffRoleController extends Controller
 
     public function update(Request $request, StaffRole $staff_role)
     {
+        $userToIgnore = User::where('staff_role_id', $staff_role->id)->first();
+        $ignoreUserId = $userToIgnore ? ',' . $userToIgnore->id : '';
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:staff_roles,name,' . $staff_role->id,
             'description' => 'nullable|string',
-            'email' => 'nullable|email|unique:staff_roles,email,' . $staff_role->id . '|unique:users,email',
+            'email' => 'nullable|email|unique:staff_roles,email,' . $staff_role->id . '|unique:users,email' . $ignoreUserId,
             'password' => 'nullable|string|min:8',
         ]);
 
