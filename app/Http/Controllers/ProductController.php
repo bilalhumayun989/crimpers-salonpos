@@ -199,28 +199,31 @@ class ProductController extends Controller
                     $product->addStock($validated['quantity']);
                     
                     // Create purchase record for stock addition
-                    $purchase = Purchase::create([
-                        'purchase_order_number' => 'ADJ-' . strtoupper(bin2hex(random_bytes(3))),
-                        'supplier_id' => $product->supplier_id ?? Supplier::first()->id ?? null,
-                        'order_date' => now(),
-                        'status' => 'received',
-                        'total_amount' => $validated['quantity'] * ($product->cost_price ?? 0),
-                        'notes' => 'Stock adjustment: ' . $validated['reason']
-                    ]);
-
-                    if ($purchase->id) {
-                        $purchase->update([
-                            'purchase_order_number' => 'PO-' . date('Y') . '-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT)
+                    $supplierId = $product->supplier_id ?? Supplier::first()->id ?? null;
+                    if ($supplierId) {
+                        $purchase = Purchase::create([
+                            'purchase_order_number' => 'ADJ-' . strtoupper(bin2hex(random_bytes(3))),
+                            'supplier_id' => $supplierId,
+                            'order_date' => now(),
+                            'status' => 'received',
+                            'total_amount' => $validated['quantity'] * ($product->cost_price ?? 0),
+                            'notes' => 'Stock adjustment: ' . $validated['reason']
                         ]);
 
-                        PurchaseItem::create([
-                            'purchase_id' => $purchase->id,
-                            'product_id' => $product->id,
-                            'quantity_ordered' => $validated['quantity'],
-                            'quantity_received' => $validated['quantity'],
-                            'unit_cost' => $product->cost_price ?? 0,
-                            'line_total' => $validated['quantity'] * ($product->cost_price ?? 0)
-                        ]);
+                        if ($purchase && $purchase->id) {
+                            $purchase->update([
+                                'purchase_order_number' => 'PO-' . date('Y') . '-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT)
+                            ]);
+
+                            PurchaseItem::create([
+                                'purchase_id' => $purchase->id,
+                                'product_id' => $product->id,
+                                'quantity_ordered' => $validated['quantity'],
+                                'quantity_received' => $validated['quantity'],
+                                'unit_cost' => $product->cost_price ?? 0,
+                                'line_total' => $validated['quantity'] * ($product->cost_price ?? 0)
+                            ]);
+                        }
                     }
                     break;
                 case 'subtract':
