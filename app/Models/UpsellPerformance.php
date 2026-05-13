@@ -25,6 +25,13 @@ class UpsellPerformance extends Model
         'last_upsell_date' => 'datetime',
     ];
 
+    protected $attributes = [
+        'total_upsells'       => 0,
+        'upsell_revenue'      => 0,
+        'conversion_rate'     => 0,
+        'average_upsell_value'=> 0,
+    ];
+
     public function staff()
     {
         return $this->belongsTo(Staff::class);

@@ -49,6 +49,19 @@ class Staff extends Model
         'rating_count' => 'integer',
     ];
 
+    protected $attributes = [
+        'hourly_rate'             => 0,
+        'base_salary'             => 0,
+        'commission_per_customer' => 0,
+        'commission_per_service'  => 0,
+        'total_earned_commission' => 0,
+        'status'                  => 1,
+        'rating'                  => 0,
+        'rating_total'            => 0,
+        'rating_count'            => 0,
+        'position'                => 'Employee',
+    ];
+
     public function getIsOnShiftAttribute()
     {
         if (!$this->shift_start || !$this->shift_end) return false;
