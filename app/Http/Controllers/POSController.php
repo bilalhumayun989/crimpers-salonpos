@@ -34,7 +34,7 @@ class POSController extends Controller
 
     public function payment()
     {
-        $staff = Staff::available()->get()->filter(function($s) {
+        $staff = Staff::available()->get()->filter(function ($s) {
             return $s->is_on_shift;
         });
         return view('pos.payment', compact('staff'));
@@ -53,7 +53,7 @@ class POSController extends Controller
 
         return DB::transaction(function () use ($request) {
             $customerId = $request->customer_id;
-            
+
             // Auto-lookup/create customer based on phone (Unique identifier)
             if (!$customerId && $request->customer_phone) {
                 // ⚠️ phone is ENCRYPTED — cannot use SQL WHERE/LIKE.
@@ -61,7 +61,7 @@ class POSController extends Controller
                 $inputPhoneClean = preg_replace('/[^0-9]/', '', $request->customer_phone);
 
                 $customer = Customer::all()->first(function ($cust) use ($inputPhoneClean) {
-                    $custPhoneClean = preg_replace('/[^0-9]/', '', (string)($cust->phone ?? ''));
+                    $custPhoneClean = preg_replace('/[^0-9]/', '', (string) ($cust->phone ?? ''));
                     return $custPhoneClean && str_contains($custPhoneClean, $inputPhoneClean);
                 });
 
@@ -74,8 +74,8 @@ class POSController extends Controller
                 } elseif ($request->customer_name && $request->customer_name !== 'Walk-in Customer') {
                     // No customer found with this phone → CREATE NEW
                     $newCustomer = Customer::create([
-                        'name'            => $request->customer_name,
-                        'phone'           => $request->customer_phone,
+                        'name' => $request->customer_name,
+                        'phone' => $request->customer_phone,
                         'membership_type' => 'Standard'
                     ]);
                     $customerId = $newCustomer->id;
@@ -86,6 +86,7 @@ class POSController extends Controller
                 'invoice_no' => 'INV-' . strtoupper(Str::random(8)),
                 'user_id' => Auth::id() ?? 1, // Fallback for dev
                 'customer_id' => $customerId,
+                'customer_name' => $request->customer_name ?? 'Walk-in Customer',
                 'total_amount' => $request->total_amount,
                 'tax' => $request->tax ?? 0,
                 'discount' => $request->discount ?? 0,
@@ -148,7 +149,7 @@ class POSController extends Controller
             if ($request->staff_id && $request->rating) {
                 $performer = Staff::find($request->staff_id);
                 if ($performer) {
-                    $performer->increment('rating_total', (int)$request->rating);
+                    $performer->increment('rating_total', (int) $request->rating);
                     $performer->increment('rating_count');
                 }
             }
@@ -199,7 +200,7 @@ class POSController extends Controller
     {
         $code = $request->input('code');
         $totalAmount = $request->input('total_amount', 0);
-        
+
         $coupon = Coupon::where('code', $code)->first();
 
         if (!$coupon) {
@@ -223,8 +224,8 @@ class POSController extends Controller
 
     public function searchCustomer(Request $request)
     {
-        $q     = trim($request->input('q', ''));
-        $name  = trim($request->input('name', ''));
+        $q = trim($request->input('q', ''));
+        $name = trim($request->input('name', ''));
         $phone = trim($request->input('phone', ''));
 
         if (empty($q) && empty($name) && empty($phone)) {
@@ -235,22 +236,26 @@ class POSController extends Controller
         // SQL LIKE queries search against ciphertext and NEVER match.
         // We MUST load all customers and filter after Laravel decrypts them.
         $cleanInputPhone = preg_replace('/[^0-9]/', '', $phone ?: $q);
-        $nameQuery       = strtolower($name ?: $q);
+        $nameQuery = strtolower($name ?: $q);
 
         $customer = Customer::all()->first(function ($cust) use ($cleanInputPhone, $nameQuery) {
-            $decryptedPhone = strtolower((string)($cust->phone ?? ''));
-            $decryptedName  = strtolower((string)($cust->name  ?? ''));
+            $decryptedPhone = strtolower((string) ($cust->phone ?? ''));
+            $decryptedName = strtolower((string) ($cust->name ?? ''));
             $cleanCustPhone = preg_replace('/[^0-9]/', '', $decryptedPhone);
 
             // Match by phone digits
-            if ($cleanInputPhone && $cleanCustPhone &&
-                str_contains($cleanCustPhone, $cleanInputPhone)) {
+            if (
+                $cleanInputPhone && $cleanCustPhone &&
+                str_contains($cleanCustPhone, $cleanInputPhone)
+            ) {
                 return true;
             }
 
             // Match by name (partial, case-insensitive)
-            if ($nameQuery && $nameQuery !== 'walk-in customer' &&
-                str_contains($decryptedName, $nameQuery)) {
+            if (
+                $nameQuery && $nameQuery !== 'walk-in customer' &&
+                str_contains($decryptedName, $nameQuery)
+            ) {
                 return true;
             }
 
@@ -261,27 +266,27 @@ class POSController extends Controller
             return response()->json(['success' => false, 'message' => 'Customer not found']);
         }
 
-        $hasMembership   = $customer->membership_status === 'Active';
+        $hasMembership = $customer->membership_status === 'Active';
         $discountPercent = 0;
         if ($hasMembership) {
             $discountPercent = stripos($customer->membership_type, 'VIP') !== false ? 15 : 10;
         }
 
-        $totalSpent  = $customer->invoices()->sum('payable_amount');
+        $totalSpent = $customer->invoices()->sum('payable_amount');
         $lastInvoice = $customer->invoices()->latest()->first();
-        $lastVisit   = $lastInvoice ? $lastInvoice->created_at->format('d M, Y') : null;
+        $lastVisit = $lastInvoice ? $lastInvoice->created_at->format('d M, Y') : null;
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'customer' => [
-                'id'               => $customer->id,
-                'name'             => $customer->name,
-                'phone'            => $customer->phone,
-                'membership_type'  => $customer->membership_type,
-                'membership_status'=> $customer->membership_status,
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'membership_type' => $customer->membership_type,
+                'membership_status' => $customer->membership_status,
                 'discount_percent' => $discountPercent,
-                'total_spent'      => $totalSpent,
-                'last_visit'       => $lastVisit,
+                'total_spent' => $totalSpent,
+                'last_visit' => $lastVisit,
             ],
         ]);
     }

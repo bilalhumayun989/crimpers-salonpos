@@ -110,10 +110,10 @@ class InvoiceController extends Controller
 
         // Apply customer filter
         if ($request->filled('customer')) {
-            $query->whereHas('customer', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->customer . '%');
-            })->orWhereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->customer . '%');
+            $query->where(function($q) use ($request) {
+                $q->whereHas('customer', function($sub) use ($request) {
+                    $sub->where('name', 'like', '%' . $request->customer . '%');
+                })->orWhere('customer_name', 'like', '%' . $request->customer . '%');
             });
         }
 
@@ -269,10 +269,10 @@ class InvoiceController extends Controller
 
         // Apply customer filter
         if ($request->filled('customer')) {
-            $query->whereHas('customer', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->customer . '%');
-            })->orWhereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->customer . '%');
+            $query->where(function($q) use ($request) {
+                $q->whereHas('customer', function($sub) use ($request) {
+                    $sub->where('name', 'like', '%' . $request->customer . '%');
+                })->orWhere('customer_name', 'like', '%' . $request->customer . '%');
             });
         }
 
@@ -323,7 +323,7 @@ class InvoiceController extends Controller
                 fputcsv($file, [
                     $invoice->invoice_no,
                     $invoice->created_at->format('Y-m-d H:i:s'),
-                    $invoice->customer ? $invoice->customer->name : ($invoice->user->name ?? 'Walk-in'),
+                    $invoice->customer ? $invoice->customer->name : ($invoice->customer_name ?? 'Walk-in Customer'),
                     number_format($invoice->payable_amount, 2),
                     $invoice->payment_method,
                     $invoice->status,

@@ -269,8 +269,7 @@
                         <tr>
                             <td style="width:120px;"><span class="inv-no">{{ $invoice->invoice_no }}</span></td>
                             <td>
-                                <div style="font-weight:600;color:#1e293b;">
-                                    {{ $invoice->customer ? $invoice->customer->name : ($invoice->user->name ?? 'Walk-in') }}
+                                    {{ $invoice->customer ? $invoice->customer->name : ($invoice->customer_name ?? 'Walk-in Customer') }}
                                 </div>
                             </td>
                             <td style="font-weight:800;color:#c9a800; text-align:right;">PKR {{ number_format($invoice->payable_amount, 2) }}</td>
@@ -317,7 +316,7 @@
                         </td>
                         <td>
                             <div style="font-weight:600;color:#1e293b;">
-                                {{ $invoice->customer ? $invoice->customer->name : ($invoice->user->name ?? 'Walk-in') }}
+                                {{ $invoice->customer ? $invoice->customer->name : ($invoice->customer_name ?? 'Walk-in Customer') }}
                             </div>
                         </td>
                         <td style="font-weight:800;color:#c9a800;">PKR {{ number_format($invoice->payable_amount, 2) }}</td>

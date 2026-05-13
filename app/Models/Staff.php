@@ -49,26 +49,14 @@ class Staff extends Model
         'rating_count' => 'integer',
     ];
 
-    protected $attributes = [
-        'hourly_rate'             => 0,
-        'base_salary'             => 0,
-        'commission_per_customer' => 0,
-        'commission_per_service'  => 0,
-        'total_earned_commission' => 0,
-        'status'                  => 1,
-        'rating'                  => 0,
-        'rating_total'            => 0,
-        'rating_count'            => 0,
-        'position'                => 'Employee',
-    ];
-
     public function getIsOnShiftAttribute()
     {
-        if (!$this->shift_start || !$this->shift_end) return false;
-        
+        if (!$this->shift_start || !$this->shift_end)
+            return false;
+
         $now = now();
         $currentTime = $now->format('H:i:s');
-        
+
         if ($this->shift_start <= $this->shift_end) {
             return ($currentTime >= $this->shift_start && $currentTime <= $this->shift_end);
         } else {
@@ -86,14 +74,15 @@ class Staff extends Model
     public function scopeAvailable($query)
     {
         $today = now()->toDateString();
-        return $query->whereHas('attendances', function($q) use ($today) {
+        return $query->whereHas('attendances', function ($q) use ($today) {
             $q->where('attendance_date', $today)->where('status', 'present');
         });
     }
 
     public function getAverageRatingAttribute()
     {
-        if ($this->rating_count == 0) return 0;
+        if ($this->rating_count == 0)
+            return 0;
         return round($this->rating_total / $this->rating_count, 1);
     }
 

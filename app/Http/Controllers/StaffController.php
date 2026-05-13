@@ -40,7 +40,6 @@ class StaffController extends Controller
             'hourly_rate' => 'nullable|numeric|min:0',
             'base_salary' => 'nullable|numeric|min:0',
             'commission_per_customer' => 'nullable|numeric|min:0',
-            'commission_per_service'  => 'nullable|numeric|min:0',
             'hiring_date' => 'nullable|date',
             'status' => 'nullable|boolean',
             'bio' => 'nullable|string',
@@ -50,7 +49,6 @@ class StaffController extends Controller
         $validated['hourly_rate'] = $validated['hourly_rate'] ?? 0;
         $validated['base_salary'] = $validated['base_salary'] ?? 0;
         $validated['commission_per_customer'] = $validated['commission_per_customer'] ?? 0;
-        $validated['commission_per_service']  = $validated['commission_per_service']  ?? 0;
         $validated['hiring_date'] = $validated['hiring_date'] ?? now();
         $validated['position'] = 'Employee';
 

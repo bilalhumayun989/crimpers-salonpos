@@ -13,7 +13,7 @@ class Invoice extends Model
     use HasFactory, BelongsToBranch;
 
     protected $fillable = [
-        'invoice_no', 'user_id', 'customer_id', 'total_amount', 'tax', 
+        'invoice_no', 'user_id', 'customer_id', 'customer_name', 'total_amount', 'tax', 
         'discount', 'payable_amount', 'payment_method', 'status',
         'cash_received', 'change_returned'
     ];
