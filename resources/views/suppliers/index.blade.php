@@ -169,9 +169,9 @@ document.getElementById('btn-confirm-del').addEventListener('click', async funct
             headers: { 
                 'X-CSRF-TOKEN': '{{ csrf_token() }}', 
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: JSON.stringify({ _method: 'DELETE' })
+            body: '_method=DELETE'
         });
         data = await res.json();
     } catch (e) {
