@@ -24,6 +24,10 @@ class Customer extends Model
         'notes',
     ];
 
+    protected $attributes = [
+        'prepaid_credit' => 0.00,
+    ];
+
     protected $casts = [
         'name' => \App\Casts\FlexibleEncryption::class,
         'phone' => \App\Casts\FlexibleEncryption::class,

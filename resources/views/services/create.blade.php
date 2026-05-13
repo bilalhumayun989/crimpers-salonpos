@@ -298,22 +298,29 @@ document.getElementById('confirm_del_btn').addEventListener('click', async funct
     btn.disabled = true;
     btn.textContent = 'Deleting...';
 
-    const response = await fetch(`{{ url('categories') }}/${categoryToDelete}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    });
+    try {
+        const response = await fetch(`{{ url('categories') }}/${categoryToDelete}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ _method: 'DELETE' })
+        });
 
-    const data = await response.json();
-    if (data.success) {
-        catSelect.remove(catSelect.selectedIndex);
-        catSelect.dispatchEvent(new Event('change'));
-        showToast(data.message);
-        hideDelModal();
-    } else {
-        showToast(data.message || 'Failed to delete', 'error');
+        const data = await response.json();
+        if (data.success) {
+            catSelect.remove(catSelect.selectedIndex);
+            catSelect.dispatchEvent(new Event('change'));
+            showToast(data.message);
+            hideDelModal();
+        } else {
+            showToast(data.message || 'Failed to delete', 'error');
+        }
+    } catch (error) {
+        console.error("Error deleting category:", error);
+        showToast('Server error. Failed to delete.', 'error');
     }
     btn.disabled = false;
     btn.textContent = 'Delete Permanently';

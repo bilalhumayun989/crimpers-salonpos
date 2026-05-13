@@ -237,11 +237,23 @@ document.getElementById('btn-confirm-del').addEventListener('click', async funct
     if (!deleteId) return;
     const btn = this;
     btn.disabled = true; btn.textContent = 'Deleting…';
-    const res = await fetch(`{{ url('customers') }}/${deleteId}`, {
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-    });
-    const data = await res.json();
+    let res, data;
+    try {
+        res = await fetch(`{{ url('customers') }}/${deleteId}`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ _method: 'DELETE' })
+        });
+        data = await res.json();
+    } catch (e) {
+        showToast('Server error during deletion.');
+        hideModal(); btn.disabled = false; btn.textContent = 'Yes, Delete';
+        return;
+    }
     if (data.success) {
         const card = document.getElementById(`customer-${deleteId}`);
         card.style.transition = 'opacity .3s, transform .3s';
