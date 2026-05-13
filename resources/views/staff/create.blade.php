@@ -458,14 +458,18 @@
                     <span class="form-card-head-title">Compensation & Commission</span>
                 </div>
                 <div class="form-card-body">
-                    <div class="f-grid-2">
+                    <div class="f-grid-3">
                         <div class="f-group">
                             <label class="f-label">Base Salary <span>(PKR / month)</span></label>
                             <input type="number" name="base_salary" value="{{ old('base_salary', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 25000">
                         </div>
                         <div class="f-group">
-                            <label class="f-label">Commission per Customer <span>(PKR)</span></label>
+                            <label class="f-label">Comm. per Customer <span>(PKR)</span></label>
                             <input type="number" name="commission_per_customer" value="{{ old('commission_per_customer', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 50">
+                        </div>
+                        <div class="f-group">
+                            <label class="f-label">Comm. per Service <span>(PKR)</span></label>
+                            <input type="number" name="commission_per_service" value="{{ old('commission_per_service', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 20">
                         </div>
                     </div>
                     <p style="margin-top:10px; font-size:.78rem; color:#94a3b8;">

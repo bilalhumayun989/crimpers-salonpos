@@ -40,6 +40,7 @@ class StaffController extends Controller
             'hourly_rate' => 'nullable|numeric|min:0',
             'base_salary' => 'nullable|numeric|min:0',
             'commission_per_customer' => 'nullable|numeric|min:0',
+            'commission_per_service' => 'nullable|numeric|min:0',
             'hiring_date' => 'nullable|date',
             'status' => 'nullable|boolean',
             'bio' => 'nullable|string',
@@ -49,6 +50,10 @@ class StaffController extends Controller
         $validated['hourly_rate'] = $validated['hourly_rate'] ?? 0;
         $validated['base_salary'] = $validated['base_salary'] ?? 0;
         $validated['commission_per_customer'] = $validated['commission_per_customer'] ?? 0;
+        $validated['commission_per_service'] = $validated['commission_per_service'] ?? 0;
+        $validated['total_earned_commission'] = 0;
+        $validated['rating_total'] = 0;
+        $validated['rating_count'] = 0;
         $validated['hiring_date'] = $validated['hiring_date'] ?? now();
         $validated['position'] = 'Employee';
 
@@ -107,11 +112,20 @@ class StaffController extends Controller
             'phone' => 'nullable|string',
             'staff_role_id' => 'nullable|exists:staff_roles,id',
             'hourly_rate' => 'nullable|numeric|min:0',
+            'base_salary' => 'nullable|numeric|min:0',
+            'commission_per_customer' => 'nullable|numeric|min:0',
+            'commission_per_service' => 'nullable|numeric|min:0',
             'hiring_date' => 'nullable|date',
             'status' => 'nullable|boolean',
             'bio' => 'nullable|string',
             'service_ids' => 'nullable|array',
         ]);
+
+        $validated['hourly_rate'] = $validated['hourly_rate'] ?? 0;
+        $validated['base_salary'] = $validated['base_salary'] ?? 0;
+        $validated['commission_per_customer'] = $validated['commission_per_customer'] ?? 0;
+        $validated['commission_per_service'] = $validated['commission_per_service'] ?? 0;
+        $validated['status'] = $request->has('status');
 
         $staff->update($validated);
         $staff->services()->sync($request->input('service_ids', []));
