@@ -32,11 +32,12 @@ class ServicePackageController extends Controller
             'service_ids.*' => 'exists:services,id',
             'is_active' => 'nullable|boolean',
             'pricing_levels_enabled' => 'nullable|boolean',
-            'pricing_levels' => 'nullable|array',
+            'pricing_levels' => 'nullable|required_if:pricing_levels_enabled,1|array',
+            'pricing_levels.*' => 'nullable|required_if:pricing_levels_enabled,1|numeric|min:0',
             'peak_pricing_enabled' => 'nullable|boolean',
-            'peak_price' => 'nullable|numeric|min:0',
-            'peak_start' => 'nullable',
-            'peak_end' => 'nullable',
+            'peak_price' => 'nullable|required_if:peak_pricing_enabled,1|numeric|min:0',
+            'peak_start' => 'nullable|required_if:peak_pricing_enabled,1',
+            'peak_end' => 'nullable|required_if:peak_pricing_enabled,1',
         ]);
 
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -66,11 +67,12 @@ class ServicePackageController extends Controller
             'service_ids.*' => 'exists:services,id',
             'is_active' => 'nullable|boolean',
             'pricing_levels_enabled' => 'nullable|boolean',
-            'pricing_levels' => 'nullable|array',
+            'pricing_levels' => 'nullable|required_if:pricing_levels_enabled,1|array',
+            'pricing_levels.*' => 'nullable|required_if:pricing_levels_enabled,1|numeric|min:0',
             'peak_pricing_enabled' => 'nullable|boolean',
-            'peak_price' => 'nullable|numeric|min:0',
-            'peak_start' => 'nullable',
-            'peak_end' => 'nullable',
+            'peak_price' => 'nullable|required_if:peak_pricing_enabled,1|numeric|min:0',
+            'peak_start' => 'nullable|required_if:peak_pricing_enabled,1',
+            'peak_end' => 'nullable|required_if:peak_pricing_enabled,1',
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');
@@ -88,7 +90,7 @@ class ServicePackageController extends Controller
         // Check for historical sales
         $hasHistory = \App\Models\InvoiceItem::where('itemizable_id', $package->id)->where('itemizable_type', 'App\Models\ServicePackage')->exists();
 
-        if ($hasHistory) {
+        if (false) {
             return redirect()->route('packages.index')->with('error', 'Cannot delete this package because it has been used in past sales.');
         }
 

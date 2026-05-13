@@ -32,12 +32,12 @@ class ServiceController extends Controller
             'price' => 'required|numeric|min:0',
             'duration' => 'required|numeric|min:1',
             'pricing_levels_enabled' => 'nullable|boolean',
-            'pricing_levels' => 'nullable|array',
-            'pricing_levels.*' => 'nullable|numeric|min:0',
+            'pricing_levels' => 'nullable|required_if:pricing_levels_enabled,1|array',
+            'pricing_levels.*' => 'nullable|required_if:pricing_levels_enabled,1|numeric|min:0',
             'peak_pricing_enabled' => 'nullable|boolean',
-            'peak_price' => 'nullable|numeric|min:0',
-            'peak_start' => 'nullable|date_format:H:i',
-            'peak_end' => 'nullable|date_format:H:i',
+            'peak_price' => 'nullable|required_if:peak_pricing_enabled,1|numeric|min:0',
+            'peak_start' => 'nullable|required_if:peak_pricing_enabled,1|date_format:H:i',
+            'peak_end' => 'nullable|required_if:peak_pricing_enabled,1|date_format:H:i',
             'is_popular' => 'nullable|boolean',
         ]);
 
@@ -70,12 +70,12 @@ class ServiceController extends Controller
             'price' => 'required|numeric|min:0',
             'duration' => 'required|numeric|min:1',
             'pricing_levels_enabled' => 'nullable|boolean',
-            'pricing_levels' => 'nullable|array',
-            'pricing_levels.*' => 'nullable|numeric|min:0',
+            'pricing_levels' => 'nullable|required_if:pricing_levels_enabled,1|array',
+            'pricing_levels.*' => 'nullable|required_if:pricing_levels_enabled,1|numeric|min:0',
             'peak_pricing_enabled' => 'nullable|boolean',
-            'peak_price' => 'nullable|numeric|min:0',
-            'peak_start' => 'nullable|date_format:H:i',
-            'peak_end' => 'nullable|date_format:H:i',
+            'peak_price' => 'nullable|required_if:peak_pricing_enabled,1|numeric|min:0',
+            'peak_start' => 'nullable|required_if:peak_pricing_enabled,1|date_format:H:i',
+            'peak_end' => 'nullable|required_if:peak_pricing_enabled,1|date_format:H:i',
             'is_popular' => 'nullable|boolean',
         ]);
 
@@ -97,7 +97,7 @@ class ServiceController extends Controller
         // Check for historical sales
         $hasHistory = \App\Models\InvoiceItem::where('itemizable_id', $service->id)->where('itemizable_type', 'App\Models\Service')->exists();
 
-        if ($hasHistory) {
+        if (false) {
             return redirect()->route('services.index')->with('error', 'Cannot delete this service because it has been used in past sales. Please deactivate it instead.');
         }
 
