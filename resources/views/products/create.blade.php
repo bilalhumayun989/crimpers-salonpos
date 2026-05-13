@@ -564,14 +564,14 @@
             btn.textContent = 'Deleting...';
 
             try {
-                const response = await fetch(`/categories/${categoryToDelete}`, {
+                const response = await fetch(`{{ url('categories') }}/${categoryToDelete}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ _method: 'DELETE' })
+                    body: '_method=DELETE'
                 });
 
                 const data = await response.json();
