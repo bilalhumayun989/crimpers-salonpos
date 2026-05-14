@@ -396,7 +396,7 @@
                         <label class="f-label">Product Type <span style="color:#ef4444;">*</span></label>
                         <select name="product_type" required class="f-select">
                             <option value="retail">Retail Product</option>
-                            <option value="service_supply">Service Supply</option>
+                            <!-- <option value="service_supply">Service Supply</option> -->
                         </select>
                     </div>
                     <div>
