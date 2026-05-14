@@ -34,7 +34,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $appointments = $customer->appointments()->with('service')->latest()->get();
-        $invoices = $customer->invoices()->latest()->get();
+        $invoices = $customer->invoices()->with('items')->latest()->get();
         
         return view('customers.show', compact('customer', 'appointments', 'invoices'));
     }

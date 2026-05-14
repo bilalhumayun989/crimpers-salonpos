@@ -304,8 +304,12 @@
                             <span class="stat-value">PKR {{ number_format($member->base_salary, 0) }}/mo</span>
                         </div>
                         <div class="stat-row">
-                            <span class="stat-label">Commission/Customer</span>
-                            <span class="stat-value">PKR {{ number_format($member->commission_per_customer, 0) }}</span>
+                            <span class="stat-label">Comm. / Customer</span>
+                            <span class="stat-value">{{ number_format($member->commission_per_customer, 1) }}%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Comm. / Service</span>
+                            <span class="stat-value">{{ number_format($member->commission_per_service, 1) }}%</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">This Month Hours</span>

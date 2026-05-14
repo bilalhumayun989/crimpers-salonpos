@@ -75,8 +75,12 @@
             <span class="stat-value">PKR {{ number_format($s->base_salary, 2) }}</span>
         </div>
         <div class="stat-row">
-            <span class="stat-label">Commission/Customer</span>
-            <span class="stat-value">PKR {{ number_format($s->commission_per_customer, 2) }}</span>
+            <span class="stat-label">Comm./Customer</span>
+            <span class="stat-value">{{ number_format($s->commission_per_customer, 1) }}%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Comm./Service</span>
+            <span class="stat-value">{{ number_format($s->commission_per_service, 1) }}%</span>
         </div>
         <div class="stat-row" style="background:#fffdf0; border-radius:4px; padding:8px;">
             <span class="stat-label">Total Earned</span>
@@ -93,7 +97,7 @@
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 Set Shift
             </button>
-            <button class="btn-hrms" onclick="editSalary({{ $s->id }}, {{ $s->base_salary }}, {{ $s->commission_per_customer }}, '{{ $s->shift_start }}', '{{ $s->shift_end }}')">Settings</button>
+            <button class="btn-hrms" onclick="editSalary({{ $s->id }}, {{ $s->base_salary }}, {{ $s->commission_per_customer }}, {{ $s->commission_per_service }}, '{{ $s->shift_start }}', '{{ $s->shift_end }}')">Settings</button>
         </div>
     </div>
     @endforeach
@@ -130,9 +134,15 @@
             <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:4px;">Base Salary (PKR)</label>
             <input type="number" id="edit-base-salary" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
         </div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:4px;">Commission per Customer (PKR)</label>
-            <input type="number" id="edit-commission" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom:12px;">
+            <div>
+                <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:4px;">Comm. Customer (%)</label>
+                <input type="number" id="edit-commission-customer" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:4px;">Comm. Service (%)</label>
+                <input type="number" id="edit-commission-service" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px;">
+            </div>
         </div>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <div style="flex:1;">
@@ -191,10 +201,11 @@ function saveQuickShift() {
     });
 }
 
-function editSalary(id, base, commission, start, end) {
+function editSalary(id, base, commCustomer, commService, start, end) {
     document.getElementById('edit-staff-id').value = id;
     document.getElementById('edit-base-salary').value = base;
-    document.getElementById('edit-commission').value = commission;
+    document.getElementById('edit-commission-customer').value = commCustomer;
+    document.getElementById('edit-commission-service').value = commService;
     document.getElementById('edit-shift-start').value = start || '';
     document.getElementById('edit-shift-end').value = end || '';
     document.getElementById('salary-modal').style.display = 'flex';
@@ -203,7 +214,8 @@ function editSalary(id, base, commission, start, end) {
 function saveSalary() {
     const id = document.getElementById('edit-staff-id').value;
     const base = document.getElementById('edit-base-salary').value;
-    const commission = document.getElementById('edit-commission').value;
+    const commCustomer = document.getElementById('edit-commission-customer').value;
+    const commService = document.getElementById('edit-commission-service').value;
     const start = document.getElementById('edit-shift-start').value;
     const end = document.getElementById('edit-shift-end').value;
 
@@ -213,7 +225,8 @@ function saveSalary() {
         body: JSON.stringify({ 
             staff_id: id, 
             base_salary: base, 
-            commission_per_customer: commission,
+            commission_per_customer: commCustomer,
+            commission_per_service: commService,
             shift_start: start,
             shift_end: end
         })

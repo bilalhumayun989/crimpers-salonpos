@@ -240,6 +240,13 @@
                         <div class="act-icon"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
                         <div class="act-info">
                             <div class="act-name">{{ $inv->invoice_no }}</div>
+                            <div class="act-meta" style="color: #64748b; font-weight: 500; margin: 3px 0; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $inv->items ? implode(', ', $inv->items->pluck('custom_name')->toArray()) : '' }}">
+                                @if($inv->items && $inv->items->count())
+                                    {{ implode(', ', $inv->items->pluck('custom_name')->toArray()) }}
+                                @else
+                                    No items listed
+                                @endif
+                            </div>
                             <div class="act-meta">{{ ucfirst($inv->payment_method) }} &middot; {{ $inv->created_at->format('M d, Y') }}</div>
                         </div>
                         <div class="act-right">

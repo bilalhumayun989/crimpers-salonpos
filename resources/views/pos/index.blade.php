@@ -136,17 +136,17 @@
     }
 
     .cat-tab.pkg-tab.active {
-      background: linear-gradient(135deg, #818cf8, #4f46e5);
-      border-color: #4f46e5;
+      background: linear-gradient(135deg, #334155, #1e293b);
+      border-color: #1e293b;
       color: #fff;
-      box-shadow: 0 2px 8px rgba(79, 70, 229, .2);
+      box-shadow: 0 2px 8px rgba(30, 41, 59, .2);
     }
 
     .cat-tab.prod-tab.active {
-      background: linear-gradient(135deg, #34d399, #059669);
-      border-color: #059669;
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(5, 150, 105, .2);
+      background: linear-gradient(135deg, #fef08a, #ca8a04);
+      border-color: #ca8a04;
+      color: #18181b;
+      box-shadow: 0 2px 8px rgba(202, 138, 4, .2);
     }
 
     .tab-count {
@@ -186,14 +186,24 @@
     }
 
     .item-card.pkg-card {
-      border-color: #D8DBE0;
-      background: #DDE0E5;
+      border-color: #cbd5e1;
+      background: #f8fafc;
     }
 
     .item-card.pkg-card:hover {
-      border-color: #B0B5BE;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
-      background: #CDD0D6;
+      border-color: #94a3b8;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+      background: #f1f5f9;
+    }
+    
+    .item-card.prod-card {
+      border-color: #fef08a;
+      background: #fefce8;
+    }
+    
+    .item-card.prod-card:hover {
+      border-color: #ca8a04;
+      box-shadow: 0 4px 14px rgba(202, 138, 4, .2);
     }
 
     .item-icon {
@@ -209,8 +219,13 @@
     }
 
     .item-card.pkg-card .item-icon {
-      background: rgba(255, 255, 255, .5);
-      color: #3C4048;
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    
+    .item-card.prod-card .item-icon {
+      background: #fef08a;
+      color: #ca8a04;
     }
 
     .item-badge {
@@ -226,12 +241,12 @@
     }
 
     .badge-hot {
-      background: #fbbf24;
+      background: #ef4444;
       color: #fff;
     }
 
     .badge-deal {
-      background: #3C4048;
+      background: #1e293b;
       color: #fff;
     }
 
@@ -266,7 +281,11 @@
     }
 
     .item-card.pkg-card .item-price {
-      color: #18181b;
+      color: #1e293b;
+    }
+    
+    .item-card.prod-card .item-price {
+      color: #ca8a04;
     }
 
     /* Cart */
@@ -658,11 +677,14 @@
         <div class="filter-row-container" style="display:flex; align-items:flex-start; gap:8px; margin-top:8px;">
           <div id="filter-row"
             style="display:flex; flex-wrap:wrap; gap:8px; overflow:hidden; max-height:42px; transition:max-height 0.3s ease; flex:1;">
-            <button class="cat-tab active" data-filter="all">All Items</button>
-            <button class="cat-tab pkg-tab" data-filter="type-package">Packages</button>
-            <button class="cat-tab prod-tab" data-filter="type-product">Products</button>
+            <button class="cat-tab main-cat-tab active" data-main-type="service">All Services</button>
+            <button class="cat-tab main-cat-tab pkg-tab" data-main-type="package">Packages</button>
+            <button class="cat-tab main-cat-tab prod-tab" data-main-type="product">Products</button>
+            
+            <div style="width:1.5px; height:24px; background:#e2e8f0; margin: 4px; border-radius: 2px;"></div>
+            
             @foreach($categories as $cat)
-              <button class="cat-tab" data-filter="cat-{{ $cat->id }}">{{ $cat->name }}</button>
+              <button class="cat-tab sub-cat-tab" data-filter="cat-{{ $cat->id }}" data-cat-type="{{ strtolower($cat->type) }}">{{ $cat->name }}</button>
             @endforeach
           </div>
           <button id="toggle-more-cat" class="cat-tab"
@@ -732,7 +754,7 @@
           @foreach($products as $product)
             <div class="item-card prod-card" data-id="{{ $product->id }}" data-type="product"
               data-name="{{ $product->name }}" data-price="{{ $product->selling_price }}"
-              data-category="{{ $product->category_id }}" data-filter="type-product"
+              data-category="{{ $product->category_id }}" data-filter="cat-{{ $product->category_id }}"
               data-barcode="{{ $product->barcode ?? '' }}">
               <div class="item-icon">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -829,8 +851,11 @@
               style="font-size:.6rem; background:#0369a1; color:#fff; padding:2px 6px; border-radius:99px; font-weight:800; text-transform:uppercase;">Standard</span>
             <span id="cust-last-visit" style="font-size:.65rem; color:#0369a1; font-weight:700;"></span>
           </div>
-          <div style="font-size:.78rem; font-weight:800; color:#0c4a6e; margin-top:4px;">
-            Spent: <span id="cust-total-spent" style="color:#059669;">PKR 0</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+            <div style="font-size:.78rem; font-weight:800; color:#0c4a6e;">
+              Spent: <span id="cust-total-spent" style="color:#059669;">PKR 0</span>
+            </div>
+            <a href="#" id="cust-detail-link" target="_blank" style="font-size:.65rem; font-weight:700; color:#fff; background:#0c4a6e; padding:4px 8px; border-radius:6px; text-decoration:none; transition:.2s;">View Detail</a>
           </div>
         </div>
 
@@ -935,6 +960,15 @@
               quickMembership.textContent = data.customer.membership_type || 'Standard';
               quickSpent.textContent = `PKR ${parseFloat(data.customer.total_spent || 0).toLocaleString()}`;
               quickLastVisit.textContent = data.customer.last_visit ? `Last Visit: ${data.customer.last_visit}` : 'First Visit';
+              
+              const detailLink = document.getElementById('cust-detail-link');
+              if (detailLink) {
+                  // Make sure there's no trailing slash before appending ID
+                  let baseUrl = "{{ url('customers') }}";
+                  if(baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                  detailLink.href = `${baseUrl}/${data.customer.id}`;
+              }
+
               quickStatsWrap.style.display = 'block';
             } else {
               activeCustomer = null;
@@ -1139,6 +1173,10 @@
       const searchEl = document.getElementById('item-search');
       searchEl.addEventListener('input', e => {
         const val = e.target.value.toLowerCase();
+        if (val.trim() === '') {
+           document.querySelector('.main-cat-tab.active').click();
+           return;
+        }
         document.querySelectorAll('.item-card').forEach(c => {
           const match = c.dataset.name.toLowerCase().includes(val) || (c.dataset.barcode && c.dataset.barcode.includes(val));
           c.style.display = match ? '' : 'none';
@@ -1146,7 +1184,7 @@
         const bc = Array.from(document.querySelectorAll('.item-card')).find(c => c.dataset.barcode === e.target.value);
         if (bc) { bc.click(); e.target.value = ''; }
       });
-      document.getElementById('search-clear-btn').onclick = () => { searchEl.value = ''; document.querySelectorAll('.item-card').forEach(c => c.style.display = ''); searchEl.focus(); };
+      document.getElementById('search-clear-btn').onclick = () => { searchEl.value = ''; document.querySelector('.main-cat-tab.active').click(); searchEl.focus(); };
 
       const filterRow = document.getElementById('filter-row');
       const toggleMoreCat = document.getElementById('toggle-more-cat');
@@ -1155,15 +1193,40 @@
         filterRow.style.maxHeight = isCol ? '500px' : '42px';
         toggleMoreCat.querySelector('svg').style.transform = isCol ? 'rotate(180deg)' : 'rotate(0deg)';
       });
-      document.querySelectorAll('.cat-tab').forEach(btn => {
-        if (btn.id === 'toggle-more-cat') return;
+
+      document.querySelectorAll('.main-cat-tab').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.cat-tab:not(#toggle-more-cat)').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          const filter = btn.dataset.filter;
-          document.querySelectorAll('.item-card').forEach(c => { c.style.display = (filter === 'all' || c.dataset.filter === filter) ? '' : 'none'; });
+          const type = btn.dataset.mainType;
+          
+          document.querySelectorAll('.sub-cat-tab').forEach(sub => {
+             // Show subcategory if its type matches, or if it's service and has no type defined
+             sub.style.display = (sub.dataset.catType === type || (type === 'service' && !sub.dataset.catType)) ? 'inline-flex' : 'none';
+          });
+
+          document.querySelectorAll('.item-card').forEach(c => {
+             c.style.display = (c.dataset.type === type) ? '' : 'none';
+          });
         });
       });
+
+      document.querySelectorAll('.sub-cat-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.sub-cat-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.dataset.filter;
+          const type = btn.dataset.catType || 'service';
+          
+          document.querySelectorAll('.item-card').forEach(c => {
+             // Only show cards that match the category filter AND are of the current main type
+             c.style.display = (c.dataset.filter === filter && c.dataset.type === type) ? '' : 'none';
+          });
+        });
+      });
+
+      // trigger initial filter to only show services
+      document.querySelector('.main-cat-tab.active').click();
     });
   </script>
 

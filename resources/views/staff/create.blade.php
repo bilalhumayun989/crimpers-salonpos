@@ -464,17 +464,17 @@
                             <input type="number" name="base_salary" value="{{ old('base_salary', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 25000">
                         </div>
                         <div class="f-group">
-                            <label class="f-label">Comm. per Customer <span>(PKR)</span></label>
-                            <input type="number" name="commission_per_customer" value="{{ old('commission_per_customer', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 50">
+                            <label class="f-label">Comm. per Customer <span>(%)</span></label>
+                            <input type="number" name="commission_per_customer" value="{{ old('commission_per_customer', 0) }}" min="0" max="100" step="0.01" class="f-input" placeholder="e.g. 5">
                         </div>
                         <div class="f-group">
-                            <label class="f-label">Comm. per Service <span>(PKR)</span></label>
-                            <input type="number" name="commission_per_service" value="{{ old('commission_per_service', 0) }}" min="0" step="0.01" class="f-input" placeholder="e.g. 20">
+                            <label class="f-label">Comm. per Service <span>(%)</span></label>
+                            <input type="number" name="commission_per_service" value="{{ old('commission_per_service', 0) }}" min="0" max="100" step="0.01" class="f-input" placeholder="e.g. 10">
                         </div>
                     </div>
                     <p style="margin-top:10px; font-size:.78rem; color:#94a3b8;">
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        Commission is earned per customer served. Total pay = Base Salary + (Commission × Customers Served).
+                        Total pay = Base Salary + (% Commission per Customer served) + (% Commission per Service performed).
                     </p>
                 </div>
             </div>
@@ -482,21 +482,27 @@
             {{-- Services --}}
             @if($services->count())
                 <div class="form-card">
-                    <div class="form-card-head">
-                        <div class="form-card-head-icon">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
-                                viewBox="0 0 24 24">
-                                <path
-                                    d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-                            </svg>
+                    <div class="form-card-head" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="form-card-head-icon">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                                </svg>
+                            </div>
+                            <span class="form-card-head-title">Assigned Services</span>
                         </div>
-                        <span class="form-card-head-title">Assigned Services</span>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #1e293b;">
+                            <input type="checkbox" id="select-all-services" style="width: 16px; height: 16px; accent-color: var(--yd); cursor: pointer;">
+                            Select All
+                        </label>
                     </div>
                     <div class="form-card-body">
                         <div class="services-grid">
                             @foreach($services as $service)
                                 <label class="service-check">
-                                    <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
+                                    <input type="checkbox" name="service_ids[]" value="{{ $service->id }}" class="individual-service-check">
                                     <span>{{ $service->name }}</span>
                                 </label>
                             @endforeach
@@ -520,4 +526,27 @@
             </div>
         </form>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('select-all-services');
+            const serviceChecks = document.querySelectorAll('.individual-service-check');
+            
+            if (selectAll) {
+                // When "Select All" is clicked
+                selectAll.addEventListener('change', function() {
+                    serviceChecks.forEach(cb => {
+                        cb.checked = selectAll.checked;
+                    });
+                });
+
+                // Update "Select All" state if user manually toggles individual checkboxes
+                serviceChecks.forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        const allChecked = Array.from(serviceChecks).every(c => c.checked);
+                        selectAll.checked = allChecked;
+                    });
+                });
+            }
+        });
+    </script>
 @endsection

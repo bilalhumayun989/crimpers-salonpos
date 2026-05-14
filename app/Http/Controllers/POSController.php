@@ -114,7 +114,9 @@ class POSController extends Controller
                     if ($performer) {
                         // Add commission if it's a service or package
                         if ($item['type'] === 'service' || $item['type'] === 'package') {
-                            $performer->increment('total_earned_commission', ($performer->commission_per_service * $item['quantity']));
+                            // Commission is now a percentage of the subtotal
+                            $commissionAmount = ($item['subtotal'] * ($performer->commission_per_service / 100));
+                            $performer->increment('total_earned_commission', $commissionAmount);
                         }
                     }
                 }
@@ -145,12 +147,20 @@ class POSController extends Controller
                 }
             }
 
-            // Update Staff Rating once per invoice
-            if ($request->staff_id && $request->rating) {
+            // Update Staff Rating and Per-Customer Commission once per invoice
+            if ($request->staff_id) {
                 $performer = Staff::find($request->staff_id);
                 if ($performer) {
-                    $performer->increment('rating_total', (int) $request->rating);
-                    $performer->increment('rating_count');
+                    if ($request->rating) {
+                        $performer->increment('rating_total', (int) $request->rating);
+                        $performer->increment('rating_count');
+                    }
+                    
+                    // Add Per-Customer Commission (Percentage of total payable amount)
+                    if ($performer->commission_per_customer > 0) {
+                        $customerCommission = ($request->payable_amount * ($performer->commission_per_customer / 100));
+                        $performer->increment('total_earned_commission', $customerCommission);
+                    }
                 }
             }
 

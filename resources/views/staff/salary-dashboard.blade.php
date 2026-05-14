@@ -29,6 +29,7 @@
                 <th>Staff Member</th>
                 <th>Performance</th>
                 <th>Base Salary</th>
+                <th>Comm. Rates</th>
                 <th>Earned Commission</th>
                 <th>Total Payable</th>
                 <th>Action</th>
@@ -58,6 +59,12 @@
                     <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">{{ $s->rating_count }} reviews</div>
                 </td>
                 <td><span style="font-weight:600;">PKR {{ number_format($s->base_salary, 2) }}</span></td>
+                <td>
+                    <div style="font-size:0.75rem;">
+                        <div style="color:#64748b;">Cust: <span style="font-weight:700; color:#1e293b;">{{ number_format($s->commission_per_customer, 1) }}%</span></div>
+                        <div style="color:#64748b;">Serv: <span style="font-weight:700; color:#1e293b;">{{ number_format($s->commission_per_service, 1) }}%</span></div>
+                    </div>
+                </td>
                 <td><span class="amt-badge">+ PKR {{ number_format($s->total_earned_commission, 2) }}</span></td>
                 <td><span style="font-weight:800; color:#16a34a; font-size:1rem;">PKR {{ number_format($s->base_salary + $s->total_earned_commission, 2) }}</span></td>
                 <td>
